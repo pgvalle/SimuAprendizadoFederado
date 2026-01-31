@@ -19,7 +19,6 @@ def train(msg: Message, context: Context):
     # Read context and run configs
     partition_id = context.node_config["partition-id"]
     num_partitions = context.node_config["num-partitions"]
-    seed = context.run_config["seed"]
     batch_size = context.run_config["batch-size"]
 
     # Load the model and initialize it with the received weights
@@ -64,7 +63,6 @@ def evaluate(msg: Message, context: Context):
     # Load the data
     partition_id = context.node_config["partition-id"]
     num_partitions = context.node_config["num-partitions"]
-    seed = context.run_config["seed"]
     batch_size = context.run_config["batch-size"]
     _, valloader = load_data(partition_id, num_partitions, batch_size)
 

@@ -41,7 +41,7 @@ def train(msg: Message, context: Context):
     partition_id = int(context.node_config["partition-id"])
     num_partitions = int(context.node_config["num-partitions"])
     batch_size = int(context.run_config["batch-size"])
-    num_global_models = int(context.run_config["num-global-models"])
+    num_models = int(context.run_config["num-global-models"])
     local_epochs = int(context.run_config["local-epochs"])
 
     # Load the data
@@ -50,7 +50,7 @@ def train(msg: Message, context: Context):
     # Load each model and get the losses
     arrays_list = []
     losses = []
-    for i in range(num_global_models):
+    for i in range(num_models):
         # get ith cluster model
         arrays = msg.content[f"{i}"]
         arrays_list.append(arrays)
@@ -114,29 +114,32 @@ def evaluate(msg: Message, context: Context):
     # Read context and run configs
     partition_id = int(context.node_config["partition-id"])
     num_partitions = int(context.node_config["num-partitions"])
+    num_models = int(context.run_config["num-global-models"])
     batch_size = int(context.run_config["batch-size"])
 
-    # Load the model and initialize it with the received weights
-    # model = Net()
-    # model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
-    # model.to(device)
-
     # Load the data
-    _, valloader = load_data(partition_id, num_partitions, batch_size)
+    _, evalloader = load_data(partition_id, num_partitions, batch_size)
 
-    # Call the evaluation function
-    # eval_loss, eval_acc = test_fn(
-    #     model,
-    #     valloader,
-    #     device,
-    # )
+    msg_eval_loss = 1e10
+    msg_eval_acc = 0
+    for i in range(num_models):
+        arrays = msg.content[f"{i}"]
+        model = Net()
+        model.load_state_dict(arrays.to_torch_state_dict())
+        model.to(device)
+        model.eval()
+
+        eval_loss, eval_acc = test_fn(model, evalloader, device)
+        if eval_loss < msg_eval_loss:
+            msg_eval_loss = eval_loss
+            msg_eval_acc = eval_acc
 
     # Construct and return reply Message
     metric_record = MetricRecord(
         {
-            "eval_loss": 0,
-            "eval_acc": 0,
-            "num-examples": len(valloader.dataset),
+            "eval_loss": msg_eval_loss,
+            "eval_acc": msg_eval_acc,
+            "num-examples": len(evalloader.dataset),
         }
     )
     content = RecordDict({"metrics": metric_record})

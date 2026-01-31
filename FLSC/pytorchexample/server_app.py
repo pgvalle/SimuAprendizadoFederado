@@ -4,7 +4,7 @@ import torch
 from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
 from flwr.serverapp import Grid, ServerApp
 
-from pytorchexample.strategy import FLASC
+from pytorchexample.strategy import FLSC
 from pytorchexample.task import Net, load_centralized_dataset, test
 
 # Create ServerApp
@@ -23,7 +23,7 @@ def main(grid: Grid, context: Context) -> None:
     lr = float(context.run_config["learning-rate"])
 
     # Initialize FedAvg strategy
-    strategy = FLASC(
+    strategy = FLSC(
         num_models=num_models,
         fraction_train=fraction_train,
         fraction_evaluate=fraction_evaluate,

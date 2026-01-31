@@ -42,7 +42,7 @@ def my_aggregate_metricrecords(records: list[RecordDict]) -> MetricRecord:
         for record_item in record.metric_records.values():
             # aggregate in-place
             for key, value in record_item.items():
-                if key in ["num-examples", "identities"]:
+                if key in ["num-examples", "identities", "identity"]:
                     # We exclude the weighting key from the aggregated MetricRecord
                     continue
                 if key not in aggregated_metrics:
@@ -64,7 +64,7 @@ def my_aggregate_metricrecords(records: list[RecordDict]) -> MetricRecord:
     return aggregated_metrics
 
 
-class FLASC(FedAvg):
+class FLSC(FedAvg):
     def __init__(
         self,
         num_models: int,
@@ -81,6 +81,7 @@ class FLASC(FedAvg):
             min_evaluate_nodes=min_evaluate_nodes,
             min_available_nodes=min_available_nodes,
         )
+
         self.arrays_dict = {}
         for i in range(num_models):
             model = Net()
@@ -134,7 +135,7 @@ class FLASC(FedAvg):
         # Construct messages
         record = RecordDict()
         record.update(self.arrays_dict)
-        record.update({"config": config})
+        record.update({self.configrecord_key: config})
         return self._construct_messages(record, node_ids, MessageType.TRAIN)
 
     def aggregate_train(
@@ -153,6 +154,33 @@ class FLASC(FedAvg):
             # Aggregate MetricRecords
             metrics = my_aggregate_metricrecords(reply_contents)
         return None, metrics
+
+    def configure_evaluate(
+        self, server_round: int, arrays: ArrayRecord, config: ConfigRecord, grid: Grid
+    ) -> Iterable[Message]:
+        """Configure the next round of federated evaluation."""
+        # Do not configure federated evaluation if fraction_evaluate is 0.
+        if self.fraction_evaluate == 0.0:
+            return []
+
+        # Sample nodes
+        num_nodes = int(len(list(grid.get_node_ids())) * self.fraction_evaluate)
+        sample_size = max(num_nodes, self.min_evaluate_nodes)
+        node_ids, num_total = sample_nodes(grid, self.min_available_nodes, sample_size)
+        log(
+            INFO,
+            "configure_evaluate: Sampled %s nodes (out of %s)",
+            len(node_ids),
+            len(num_total),
+        )
+
+        # Always inject current server round
+        config["server-round"] = server_round
+
+        record = RecordDict()
+        record.update(self.arrays_dict)
+        record.update({self.configrecord_key: config})
+        return self._construct_messages(record, node_ids, MessageType.EVALUATE)
 
     def my_start(
         self,
