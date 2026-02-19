@@ -21,6 +21,8 @@ def main(grid: Grid, context: Context) -> None:
     num_rounds = int(context.run_config["num-server-rounds"])
     num_models = int(context.run_config["num-global-models"])
     lr = float(context.run_config["learning-rate"])
+    n = int(context.run_config["N"])
+    print(f"N={n}")
 
     # Initialize FedAvg strategy
     strategy = FLSC(

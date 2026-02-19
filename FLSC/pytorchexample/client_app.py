@@ -15,20 +15,10 @@ from pytorchexample.task import train as train_fn
 app = ClientApp()
 
 
-def select_models(losses: list[float], thresh: float = 0.7):
-    minloss = min(losses)
-    maxloss = max(losses)
-    deltaloss = maxloss - minloss
-
-    # if deltaloss <= 1e-6:
-    weights = [1] * len(losses)
+def select_models(losses: list[float], n: int):
     identities = [i for i in range(len(losses))]
-    identities = random.choices(identities, k=1)
-    return weights, identities
-
-    # weights = [1 - (loss - minloss) / deltaloss for loss in losses]
-    # identities = [i for i, w in enumerate(weights) if w >= thresh]
-    # return weights, identities
+    identities = random.choices(identities, k=n)
+    return identities
 
 
 @app.train()
@@ -43,6 +33,7 @@ def train(msg: Message, context: Context):
     batch_size = int(context.run_config["batch-size"])
     num_models = int(context.run_config["num-global-models"])
     local_epochs = int(context.run_config["local-epochs"])
+    n = int(context.run_config["N"])
 
     # Load the data
     trainloader, evalloader = load_data(partition_id, num_partitions, batch_size)
@@ -65,17 +56,15 @@ def train(msg: Message, context: Context):
         eval_loss, _ = test_fn(model, evalloader, device)
         losses.append(eval_loss)
 
-    weights, identities = select_models(losses)
-
+    identities = select_models(losses, n)
     fusion_np_arrays = {}
     for i in identities:
         arrays = arrays_list[i]
-        weight = weights[i]
         for k, v in arrays.items():
             if k not in fusion_np_arrays:
-                fusion_np_arrays[k] = v.numpy() * weight
+                fusion_np_arrays[k] = v.numpy() / n
             else:
-                fusion_np_arrays[k] += v.numpy() * weight
+                fusion_np_arrays[k] += v.numpy() / n
 
     # load fusion as pytorch model
     fusion_arrays = ArrayRecord(
@@ -120,8 +109,8 @@ def evaluate(msg: Message, context: Context):
     # Load the data
     _, evalloader = load_data(partition_id, num_partitions, batch_size)
 
-    msg_eval_loss = 1e10
-    msg_eval_acc = 0
+    best_eval_loss = 1e10
+    best_eval_acc = 0
     for i in range(num_models):
         arrays = msg.content[f"{i}"]
         model = Net()
@@ -130,15 +119,15 @@ def evaluate(msg: Message, context: Context):
         model.eval()
 
         eval_loss, eval_acc = test_fn(model, evalloader, device)
-        if eval_loss < msg_eval_loss:
-            msg_eval_loss = eval_loss
-            msg_eval_acc = eval_acc
+        if eval_loss < best_eval_loss:
+            best_eval_loss = eval_loss
+            best_eval_acc = eval_acc
 
     # Construct and return reply Message
     metric_record = MetricRecord(
         {
-            "eval_loss": msg_eval_loss,
-            "eval_acc": msg_eval_acc,
+            "eval_loss": best_eval_loss,
+            "eval_acc": best_eval_acc,
             "num-examples": len(evalloader.dataset),
         }
     )
