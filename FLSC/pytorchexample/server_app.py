@@ -21,7 +21,7 @@ def main(grid: Grid, context: Context) -> None:
     num_rounds = int(context.run_config["num-server-rounds"])
     num_models = int(context.run_config["num-global-models"])
     lr = float(context.run_config["learning-rate"])
-    n = int(context.run_config["N"])
+    n = int(context.run_config["n"])
     print(f"N={n}")
 
     # Initialize FedAvg strategy
@@ -32,16 +32,11 @@ def main(grid: Grid, context: Context) -> None:
     )
 
     # Start strategy, run FedAvg for `num_rounds`
-    result = strategy.my_start(
+    strategy.my_start(
         grid=grid,
         train_config=ConfigRecord({"lr": lr}),
         num_rounds=num_rounds,
     )
-
-    # Save final model to disk
-    print("\nSaving final model to disk...")
-    state_dict = result.arrays.to_torch_state_dict()
-    torch.save(state_dict, "final_model.pt")
 
 
 def global_evaluate(server_round: int, arrays: ArrayRecord) -> MetricRecord:

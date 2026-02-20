@@ -16,9 +16,17 @@ app = ClientApp()
 
 
 def select_models(losses: list[float], n: int):
-    identities = [i for i in range(len(losses))]
-    identities = random.choices(identities, k=n)
-    return identities
+    count = len(losses)
+    lmax = max(losses)
+    lmin = min(losses)
+    lrange = lmax - lmin
+
+    if lrange <= 1e-5:
+        return random.choices(range(count), k=n)
+
+    ilosses = [(i, losses[i]) for i in range(count)]
+    ilosses.sort(key=lambda iloss: iloss[1])
+    return [ilosses[i][0] for i in range(n)]
 
 
 @app.train()
@@ -33,7 +41,7 @@ def train(msg: Message, context: Context):
     batch_size = int(context.run_config["batch-size"])
     num_models = int(context.run_config["num-global-models"])
     local_epochs = int(context.run_config["local-epochs"])
-    n = int(context.run_config["N"])
+    n = int(context.run_config["n"])
 
     # Load the data
     trainloader, evalloader = load_data(partition_id, num_partitions, batch_size)
