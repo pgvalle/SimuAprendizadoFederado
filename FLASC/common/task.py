@@ -44,6 +44,7 @@ def apply_transforms(batch):
 
 def load_data(partition_id: int, num_partitions: int, batch_size: int):
     """Load partition CIFAR10 data."""
+
     # Only initialize `FederatedDataset` once
     global fds
     if fds is None:
@@ -67,8 +68,9 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int):
     return trainloader, testloader
 
 
-def load_centralized_dataset():
+def load_centralized_dataset(seed: int):
     """Load test set and return dataloader."""
+
     # Load entire test set
     test_dataset = load_dataset("uoft-cs/cifar10", split="test")
     dataset = test_dataset.with_format("torch").with_transform(apply_transforms)
@@ -77,6 +79,7 @@ def load_centralized_dataset():
 
 def train(net, trainloader, epochs, lr, device):
     """Train the model on the training set."""
+
     net.to(device)  # move model to GPU if available
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=lr, momentum=0.9)

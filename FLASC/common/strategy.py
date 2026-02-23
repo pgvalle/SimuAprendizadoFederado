@@ -18,10 +18,10 @@ from flwr.serverapp.strategy.strategy_utils import (
     sample_nodes,
 )
 
-from pytorchexample.task import Net
+from .task import Net
 
 
-def my_aggregate_metricrecords(records: list[RecordDict]) -> MetricRecord:
+def my_aggregate_metricrecords(records: list[RecordDict], _: str = "") -> MetricRecord:
     """Perform weighted aggregation all MetricRecords using a specific key."""
     # Retrieve weighting factor from MetricRecord
     weights: list[float] = []
@@ -61,12 +61,10 @@ def my_aggregate_metricrecords(records: list[RecordDict]) -> MetricRecord:
                         current_value = cast(float, aggregated_metrics[key])
                         aggregated_metrics[key] = current_value + value * weight
 
-                log(INFO, f"{key, value}")
-
     return aggregated_metrics
 
 
-class FLSC(FedAvg):
+class ClusterStrategy(FedAvg):
     def __init__(
         self,
         num_models: int,
@@ -82,6 +80,8 @@ class FLSC(FedAvg):
             min_train_nodes=min_train_nodes,
             min_evaluate_nodes=min_evaluate_nodes,
             min_available_nodes=min_available_nodes,
+            train_metrics_aggr_fn=my_aggregate_metricrecords,
+            evaluate_metrics_aggr_fn=my_aggregate_metricrecords,
         )
 
         self.arrays_dict = {}

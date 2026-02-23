@@ -21,18 +21,21 @@ packages = ["."]
 publisher = "flwrlabs"
 
 [tool.flwr.app.components]
-serverapp = "pytorchexample.server_app:app"
-clientapp = "pytorchexample.client_app:app"
+serverapp = "FedAvg.server_app:app"
+clientapp = "FedAvg.client_app:app"
 
 [tool.flwr.app.config]
-num-global-models = 4
 num-server-rounds = 10
 fraction-train = 0.8
 fraction-evaluate = 0.5
 local-epochs = 3
 learning-rate = 0.001
 batch-size = 32
-rho = 0.1 # tolerance of loss
+seed = 42 # Add seed for reproducibility
+# New things
+num-global-models = 4 # FLASC and FLSC
+rho = 0.1 # FLASC - tolerance of loss
+n = 4 # FLSC
 
 [tool.flwr.federations]
 default = "local-simulation"

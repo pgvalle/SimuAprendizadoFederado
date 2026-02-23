@@ -4,9 +4,9 @@ import torch
 from flwr.app import ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from pytorchexample.task import Net, load_data
-from pytorchexample.task import test as test_fn
-from pytorchexample.task import train as train_fn
+from common.task import Net, load_data
+from common.task import test as test_fn
+from common.task import train as train_fn
 
 # Flower ClientApp
 app = ClientApp()
@@ -17,9 +17,9 @@ def train(msg: Message, context: Context):
     """Train the model on local data."""
 
     # Read context and run configs
-    partition_id = context.node_config["partition-id"]
-    num_partitions = context.node_config["num-partitions"]
-    batch_size = context.run_config["batch-size"]
+    partition_id = int(context.node_config["partition-id"])
+    num_partitions = int(context.node_config["num-partitions"])
+    batch_size = int(context.run_config["batch-size"])
 
     # Load the model and initialize it with the received weights
     model = Net()
@@ -35,17 +35,15 @@ def train(msg: Message, context: Context):
         model,
         trainloader,
         context.run_config["local-epochs"],
-        msg.content["config"]["lr"],
+        context.run_config["learning-rate"],
         device,
     )
 
     # Construct and return reply Message
     model_record = ArrayRecord(model.state_dict())
-    metrics = {
-        "train_loss": train_loss,
-        "num-examples": len(trainloader.dataset),
-    }
-    metric_record = MetricRecord(metrics)
+    metric_record = MetricRecord(
+        {"train_loss": train_loss, "num-examples": len(trainloader.dataset)}
+    )
     content = RecordDict({"arrays": model_record, "metrics": metric_record})
     return Message(content=content, reply_to=msg)
 
@@ -74,11 +72,12 @@ def evaluate(msg: Message, context: Context):
     )
 
     # Construct and return reply Message
-    metrics = {
-        "eval_loss": eval_loss,
-        "eval_acc": eval_acc,
-        "num-examples": len(valloader.dataset),
-    }
-    metric_record = MetricRecord(metrics)
+    metric_record = MetricRecord(
+        {
+            "eval_loss": eval_loss,
+            "eval_acc": eval_acc,
+            "num-examples": len(valloader.dataset),
+        }
+    )
     content = RecordDict({"metrics": metric_record})
     return Message(content=content, reply_to=msg)

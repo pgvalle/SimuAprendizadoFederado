@@ -7,46 +7,26 @@ import torch
 from flwr.app import Array, ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from pytorchexample.task import Net, load_data
-from pytorchexample.task import test as test_fn
-from pytorchexample.task import train as train_fn
+from common.task import Net, load_data
+from common.task import test as test_fn
+from common.task import train as train_fn
 
 # Flower ClientApp
 app = ClientApp()
 
-tf = open("train.txt", "a+")
-ef = open("eval.txt", "a+")
 
-
-def select_models(losses: list[float], rho: float):
+def select_models(losses: list[float], n: int):
     count = len(losses)
-    lmax, lmin = max(losses), min(losses)
+    lmax = max(losses)
+    lmin = min(losses)
     lrange = lmax - lmin
 
-    # Case: All losses are identical or extremely close
     if lrange <= 1e-5:
-        return [random.choice(range(count))], [1.0]
+        return np.random.choice(range(count), size=n, replace=False).tolist()
 
-    # 1. Normalize and Filter in one pass
-    # we use (1 - normalized_loss) because lower loss should have higher weight
-    selected_indices = []
-    raw_weights = []
-
-    for i, loss in enumerate(losses):
-        norm_l = (loss - lmin) / lrange
-        if norm_l <= rho:
-            selected_indices.append(i)
-            raw_weights.append(1.0 - norm_l)
-
-    if not selected_indices:
-        # Fallback if rho is so small nothing was selected
-        idx = losses.index(lmin)
-        return [idx], [1.0]
-
-    # 2. Apply "Value as Weight" logic
-    total_raw_weight = sum(raw_weights)
-    final_weights = [w / total_raw_weight for w in raw_weights]
-    return selected_indices, final_weights
+    ilosses = [(i, losses[i]) for i in range(count)]
+    ilosses.sort(key=lambda iloss: iloss[1])
+    return [ilosses[i][0] for i in range(n)]
 
 
 @app.train()
@@ -59,9 +39,9 @@ def train(msg: Message, context: Context):
     partition_id = int(context.node_config["partition-id"])
     num_partitions = int(context.node_config["num-partitions"])
     batch_size = int(context.run_config["batch-size"])
-    num_models = int(context.run_config["num-global-models"])
     local_epochs = int(context.run_config["local-epochs"])
-    rho = float(context.run_config["rho"])
+    num_models = int(context.run_config["num-global-models"])
+    n = int(context.run_config["n"])
 
     # Load the data
     trainloader, evalloader = load_data(partition_id, num_partitions, batch_size)
@@ -84,17 +64,15 @@ def train(msg: Message, context: Context):
         eval_loss, _ = test_fn(model, evalloader, device)
         losses.append(eval_loss)
 
-    identities, weights = select_models(losses, rho)
+    identities = select_models(losses, n)
     fusion_np_arrays = {}
     for i in identities:
         arrays = arrays_list[i]
-        weight = weights.pop(0)
-
         for k, v in arrays.items():
             if k not in fusion_np_arrays:
-                fusion_np_arrays[k] = v.numpy() * weight
+                fusion_np_arrays[k] = v.numpy() / n
             else:
-                fusion_np_arrays[k] += v.numpy() * weight
+                fusion_np_arrays[k] += v.numpy() / n
 
     # load fusion as pytorch model
     fusion_arrays = ArrayRecord(
@@ -110,7 +88,6 @@ def train(msg: Message, context: Context):
         msg.content["config"]["lr"],
         device,
     )
-    tf.write(f"{train_loss} {identities}\n")
 
     # Construct and return reply Message
     fusion_record = ArrayRecord(fusion.state_dict())
@@ -121,6 +98,7 @@ def train(msg: Message, context: Context):
             "num-examples": len(trainloader.dataset),
         }
     )
+
     content = RecordDict({"arrays": fusion_record, "metrics": metric_record})
     return Message(content=content, reply_to=msg)
 
@@ -153,8 +131,6 @@ def evaluate(msg: Message, context: Context):
         if eval_loss < best_eval_loss:
             best_eval_loss = eval_loss
             best_eval_acc = eval_acc
-
-    ef.write(f"{best_eval_loss} {best_eval_acc}\n")
 
     # Construct and return reply Message
     metric_record = MetricRecord(
