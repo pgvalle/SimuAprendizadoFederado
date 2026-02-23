@@ -18,18 +18,35 @@ tf = open("train.txt", "a+")
 ef = open("eval.txt", "a+")
 
 
-def select_models(losses: list[float], n: int):
+def select_models(losses: list[float], rho: float):
     count = len(losses)
-    lmax = max(losses)
-    lmin = min(losses)
+    lmax, lmin = max(losses), min(losses)
     lrange = lmax - lmin
 
+    # Case: All losses are identical or extremely close
     if lrange <= 1e-5:
-        return random.choices(range(count), k=n)
+        return [random.choice(range(count))], [1.0]
 
-    ilosses = [(i, losses[i]) for i in range(count)]
-    ilosses.sort(key=lambda iloss: iloss[1])
-    return [ilosses[i][0] for i in range(n)]
+    # 1. Normalize and Filter in one pass
+    # we use (1 - normalized_loss) because lower loss should have higher weight
+    selected_indices = []
+    raw_weights = []
+
+    for i, loss in enumerate(losses):
+        norm_l = (loss - lmin) / lrange
+        if norm_l <= rho:
+            selected_indices.append(i)
+            raw_weights.append(1.0 - norm_l)
+
+    if not selected_indices:
+        # Fallback if rho is so small nothing was selected
+        idx = losses.index(lmin)
+        return [idx], [1.0]
+
+    # 2. Apply "Value as Weight" logic
+    total_raw_weight = sum(raw_weights)
+    final_weights = [w / total_raw_weight for w in raw_weights]
+    return selected_indices, final_weights
 
 
 @app.train()
@@ -44,7 +61,7 @@ def train(msg: Message, context: Context):
     batch_size = int(context.run_config["batch-size"])
     num_models = int(context.run_config["num-global-models"])
     local_epochs = int(context.run_config["local-epochs"])
-    n = int(context.run_config["n"])
+    rho = float(context.run_config["rho"])
 
     # Load the data
     trainloader, evalloader = load_data(partition_id, num_partitions, batch_size)
@@ -67,15 +84,17 @@ def train(msg: Message, context: Context):
         eval_loss, _ = test_fn(model, evalloader, device)
         losses.append(eval_loss)
 
-    identities = select_models(losses, n)
+    identities, weights = select_models(losses, rho)
     fusion_np_arrays = {}
     for i in identities:
         arrays = arrays_list[i]
+        weight = weights.pop(0)
+
         for k, v in arrays.items():
             if k not in fusion_np_arrays:
-                fusion_np_arrays[k] = v.numpy() / n
+                fusion_np_arrays[k] = v.numpy() * weight
             else:
-                fusion_np_arrays[k] += v.numpy() / n
+                fusion_np_arrays[k] += v.numpy() * weight
 
     # load fusion as pytorch model
     fusion_arrays = ArrayRecord(
@@ -102,7 +121,6 @@ def train(msg: Message, context: Context):
             "num-examples": len(trainloader.dataset),
         }
     )
-
     content = RecordDict({"arrays": fusion_record, "metrics": metric_record})
     return Message(content=content, reply_to=msg)
 

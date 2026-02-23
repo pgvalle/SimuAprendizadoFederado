@@ -32,7 +32,7 @@ fraction-evaluate = 0.5
 local-epochs = 3
 learning-rate = 0.001
 batch-size = 32
-n = 2
+rho = 0.1 # tolerance of loss
 
 [tool.flwr.federations]
 default = "local-simulation"

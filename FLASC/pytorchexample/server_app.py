@@ -3,8 +3,8 @@
 import torch
 from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
 from flwr.serverapp import Grid, ServerApp
-from flwr.serverapp.strategy import FedAvg
 
+from pytorchexample.strategy import Strategy
 from pytorchexample.task import Net, load_centralized_dataset, test
 
 # Create ServerApp
@@ -16,33 +16,27 @@ def main(grid: Grid, context: Context) -> None:
     """Main entry point for the ServerApp."""
 
     # Read run config
-    fraction_train: float = context.run_config["fraction-train"]
-    fraction_evaluate: float = context.run_config["fraction-evaluate"]
-    num_rounds: int = context.run_config["num-server-rounds"]
-    lr: float = context.run_config["learning-rate"]
-
-    # Load global model
-    global_model = Net()
-    arrays = ArrayRecord(global_model.state_dict())
+    fraction_train = float(context.run_config["fraction-train"])
+    fraction_evaluate = float(context.run_config["fraction-evaluate"])
+    num_rounds = int(context.run_config["num-server-rounds"])
+    num_models = int(context.run_config["num-global-models"])
+    lr = float(context.run_config["learning-rate"])
+    rho = float(context.run_config["rho"])
+    print(f"rho={rho}")
 
     # Initialize FedAvg strategy
-    strategy = FedAvg(
+    strategy = Strategy(
+        num_models=num_models,
         fraction_train=fraction_train,
         fraction_evaluate=fraction_evaluate,
     )
 
     # Start strategy, run FedAvg for `num_rounds`
-    result = strategy.start(
+    strategy.my_start(
         grid=grid,
-        initial_arrays=arrays,
         train_config=ConfigRecord({"lr": lr}),
         num_rounds=num_rounds,
     )
-
-    # Save final model to disk
-    print("\nSaving final model to disk...")
-    state_dict = result.arrays.to_torch_state_dict()
-    torch.save(state_dict, "final_model.pt")
 
 
 def global_evaluate(server_round: int, arrays: ArrayRecord) -> MetricRecord:
