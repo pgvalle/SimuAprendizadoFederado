@@ -1,7 +1,5 @@
 """pytorchexample: A Flower / PyTorch app."""
 
-import random
-
 import numpy as np
 import torch
 from flwr.app import Array, ArrayRecord, Context, Message, MetricRecord, RecordDict
@@ -15,15 +13,13 @@ from common.task import train as train_fn
 app = ClientApp()
 
 
-def select_models(losses: list[float], rho: float):
-    count = len(losses)
-    lmax = max(losses)
-    lmin = min(losses)
-    lrange = lmax - lmin
+def select_models(losses: list[float], rho: float, epsilon: float = 1e-5):
+    lmin, lmax = min(losses), max(losses)
 
     # Case: All losses are identical or extremely close
-    if lrange <= 1e-5:
-        return [np.random.choice(range(count))], [1.0]
+    if lmax - lmin <= epsilon:
+        idx = np.random.choice(len(losses))
+        return [idx], [1.0]
 
     # 1. Normalize and Filter in one pass
     # we use (1 - normalized_loss) because lower loss should have higher weight
@@ -31,19 +27,14 @@ def select_models(losses: list[float], rho: float):
     raw_weights = []
 
     for i, loss in enumerate(losses):
-        norm_l = (loss - lmin) / lrange
+        norm_l = (loss - lmin) / (lmax - lmin)
         if norm_l <= rho:
             selected_indices.append(i)
             raw_weights.append(1.0 - norm_l)
 
-    if not selected_indices:
-        # Fallback if rho is so small nothing was selected
-        idx = losses.index(lmin)
-        return [idx], [1.0]
-
     # 2. Apply "Value as Weight" logic
-    total_raw_weight = sum(raw_weights)
-    final_weights = [w / total_raw_weight for w in raw_weights]
+    total = sum(raw_weights)
+    final_weights = [w / total for w in raw_weights]
     return selected_indices, final_weights
 
 
