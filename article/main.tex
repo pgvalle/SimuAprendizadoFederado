@@ -1,0 +1,64 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{cite}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[ruled,vlined,linesnumbered,portuguese]{algorithm2e}
+\usepackage{graphicx, url}
+\usepackage{verbatim}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{svg}
+\usepackage{placeins}
+\usepackage{hyperref}
+
+\renewcommand{\footnotesize}{\scriptsize}
+\hyphenpenalty=750
+
+\pagestyle{plain}
+\sloppy
+
+% Configuração para listings
+\lstset{
+    basicstyle=\footnotesize\ttfamily,
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    commentstyle=\color{green!60!black},
+    frame=lines,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{FLASC: Aprendizado Federado com Agrupamento Suave Adaptativo para Mitigação de Heterogeneidade de Dados}
+
+\author{
+  Pedro Gabriel do Valle Nogueira\inst{1}
+}
+
+\address{
+  Programa de Pós-Graduação em Engenharia Eletrônica\\
+  Universidade do Estado do Rio de Janeiro (UERJ) -- Rio de Janeiro, RJ -- Brasil
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{resumo}
+\end{resumo}
+
+\begin{abstract}
+\end{abstract}
+
+\input{sections/introducao}
+\input{sections/flasc}
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

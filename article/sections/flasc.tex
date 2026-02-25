@@ -1,0 +1,121 @@
+\section{FLASC} \label{sec:proposta}
+
+O algoritmo FLASC (\textit{Federated Learning with Adaptive Soft Clustering}) é uma proposta de melhoria do FLSC \cite{li2022federated}
+que introduz um mecanismo mais flexível de atribuição de identidade de cluster.
+O funcionamento do FLASC pode ser decomposto em três fases principais: inicialização,
+processamento adaptativo no cliente e agregação por cluster no servidor.
+
+\subsection{Inicialização e Distribuição}
+
+O servidor mantém um conjunto de $K$ modelos globais de cluster $\mathcal{W}_t = \{W_{1,t}, W_{2,t}, \dots, W_{K,t}\}$.
+Em cada rodada de treinamento $t$, o servidor seleciona aleatoriamente uma fração de clientes participantes e transmite a eles todos os $K$ modelos.
+
+\subsection{Seleção Adaptativa e Fusão no Cliente}
+
+O cliente $c$ avalia a perda empírica de cada modelo utilizando seu conjunto de dados local $\mathcal{D}_c$.
+A perda $L_{c,k}$ do $k$-ésimo modelo no cliente $c$ é obtida de acordo com a Equação \ref{eq:loss_eval}.
+\begin{equation}
+    L_{c,k} = \text{Loss}(W_{k,t}; \mathcal{D}_c) \label{eq:loss_eval}
+\end{equation}
+
+O processo de seleção depende da dispersão das perdas observadas.
+Define-se $L_{min} = \min_k \{L_{c,k}\}$ e $L_{max} = \max_k \{L_{c,k}\}$. O algoritmo trata dois cenários fundamentais baseados na sensibilidade $\epsilon$:
+
+\begin{enumerate}
+    \item \textbf{Cenário de Indistinguibilidade ($L_{max} - L_{min} \leq \epsilon$):} Caso a diferença entre o melhor e o pior desempenho seja desprezível (ex: $\epsilon = 10^{-5}$), o cliente seleciona aleatoriamente um único modelo $k \in \{1, \dots, K\}$ para o treinamento local.
+
+    \item \textbf{Cenário de Seleção Adaptativa ($L_{max} - L_{min} > \epsilon$):} As perdas são primeiramente normalizadas no intervalo $[0, 1]$ seguindo a Equação \ref{eq:normalization}:
+    \begin{equation}
+        \hat{L}_{c,k} = \frac{L_{c,k} - L_{min}}{L_{max} - L_{min}} \label{eq:normalization}
+    \end{equation}
+
+    O conjunto de índices $S_c$ dos modelos selecionados é determinado pelo critério de tolerância $\rho \in [0, 1]$, conforme definido na Equação \ref{eq:selection_set}:
+    \begin{equation}
+        S_c = \{k \in \{1, \dots, K\} \mid \hat{L}_{c,k} \leq \rho\} \label{eq:selection_set}
+    \end{equation}
+\end{enumerate}
+
+Para a fusão local, o FLASC atribui pesos $\alpha_{c,k}$ que priorizam modelos com melhor ajuste. Define-se inicialmente o valor de suporte $v_{c,k} = 1 - \hat{L}_{c,k}$. O peso final de cada modelo selecionado é obtido pela Equação \ref{eq:fusion_weights}:
+\begin{equation}
+    \alpha_{c,k} = \frac{v_{c,k}}{\sum_{j \in S_c} v_{c,j}} \label{eq:fusion_weights}
+\end{equation}
+
+A Listagem \ref{code:flasc_select} apresenta a implementação em Python da lógica de seleção adaptativa, destacando a transição entre os modelos matemáticos e a execução prática no cliente.
+
+\begin{lstlisting}[language=Python, caption={Lógica de seleção adaptativa no cliente FLASC.}, label={code:flasc_select}, frame=lines, numbers=left, basicstyle=\footnotesize\ttfamily, keywordstyle=\color{blue}]
+def select_models(losses, rho, epsilon=1e-5):
+    lmin, lmax = min(losses), max(losses)
+
+    # Caso de indistinguibilidade
+    if (lmax - lmin) <= epsilon:
+        idx = np.random.choice(len(losses))
+        return [idx], [1.0]
+
+    # Selecao baseada em tolerancia (rho)
+    selected, raw_weights = [], []
+    for i, loss in enumerate(losses):
+        norm_l = (loss - lmin) / (lmax - lmin)
+        if norm_l <= rho:
+            selected.append(i)
+            # v = 1 - norm_l (melhor perda = maior peso)
+            raw_weights.append(1.0 - norm_l)
+
+    # Normalizacao dos pesos de fusao
+    total = sum(raw_weights)
+    weights = [w / total for w in raw_weights]
+    return selected, weights
+\end{lstlisting}
+
+O modelo de partida para o treinamento local, $W_{c,t}^{start}$, é construído através da combinação convexa dos modelos selecionados, conforme a Equação \ref{eq:convex_comb}:
+\begin{equation}
+    W_{c,t}^{start} = \sum_{k \in S_c} \alpha_{c,k} W_{k,t} \label{eq:convex_comb}
+\end{equation}
+Após a inicialização por fusão, o cliente realiza o treinamento local por $E$ épocas, resultando em um modelo atualizado $W_{c,t}^{end}$. O cliente, então, reporta ao servidor o modelo $W_{c,t}^{end}$ e o conjunto de identificadores $S_c$.
+
+\subsection{Agregação por Cluster}
+
+No servidor, os modelos globais são atualizados de forma independente. Para cada cluster $k \in \{1, \dots, K\}$, a agregação considera apenas os clientes que selecionaram o modelo $k$ em seu processo de fusão ($k \in S_c$), seguindo a Equação \ref{eq:aggregation}:
+\begin{equation}
+    W_{k,t+1} = \frac{\sum_{c: k \in S_c} n_c W_{c,t}^{end}}{\sum_{c: k \in S_c} n_c} \label{eq:aggregation}
+\end{equation}
+onde $n_c$ representa o número de amostras locais do cliente $c$. Essa arquitetura permite que os clusters evoluam de forma a representar especializações distintas nos dados, enquanto a natureza \textit{soft} da seleção adaptativa garante que os clientes possam se beneficiar de múltiplos domínios de conhecimento simultaneamente.
+
+Em suma, o hiperparâmetro $\rho$ atua como um regulador da generalização do modelo. Valores de $\rho$ próximos a 0 aproximam o FLASC de abordagens de \textit{hard clustering} como o IFCA \cite{ghosh2020efficient}, onde apenas o melhor modelo é aproveitado. Por outro lado, valores próximos a 1 aproximam o comportamento do FLSC \cite{li2022federated}, permitindo uma fusão mais inclusiva. A natureza adaptativa do FLASC reside em permitir que essa decisão não seja global, mas sim tomada localmente por cada cliente com base na qualidade relativa dos modelos disponíveis frente aos seus dados específicos.
+
+Em resumo, o fluxo operacional completo do FLASC é detalhado no Algoritmo \ref{alg:flasc}.
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \KwIn{Parâmetros iniciais $w_0$, tolerância $\rho$, sensibilidade $\epsilon$}
+    \KwData{Conjuntos de dados locais $\{\mathcal{D}_c\}$ nos clientes}
+    \BlankLine
+    \textbf{Servidor:} Inicializa $K$ modelos de cluster $\mathcal{W}_0 = \{W_{1,0}, \dots, W_{K,0}\}$ com $w_0$\;
+    \For{cada rodada $t = 0, 1, \dots, T$}{
+        Servidor seleciona aleatoriamente um subconjunto de clientes $P_t$\;
+        Servidor transmite $\mathcal{W}_t$ para todos os clientes em $P_t$\;
+        \BlankLine
+        \textbf{Cada cliente $c \in P_t$ em paralelo:}\;
+        Avalia perdas locais $L_{c,k} = \text{Loss}(W_{k,t}; \mathcal{D}_c)$ para $k \in \{1, \dots, K\}$\;
+        $L_{min} \leftarrow \min_k \{L_{c,k}\}$, $L_{max} \leftarrow \max_k \{L_{c,k}\}$\;
+        \If{$L_{max} - L_{min} \leq \epsilon$}{
+            $S_c \leftarrow \{ \text{índice aleatório de } \{1, \dots, K\} \}$\;
+            $\alpha_{c,k} \leftarrow 1.0$ para $k \in S_c$\;
+        }
+        \Else{
+            $\hat{L}_{c,k} \leftarrow \frac{L_{c,k} - L_{min}}{L_{max} - L_{min}}$ para cada $k$\;
+            $S_c \leftarrow \{k \mid \hat{L}_{c,k} \leq \rho\}$\;
+            $v_{c,k} \leftarrow 1 - \hat{L}_{c,k}$ para $k \in S_c$\;
+            $\alpha_{c,k} \leftarrow v_{c,k} / \sum_{j \in S_c} v_{c,j}$ para $k \in S_c$\;
+        }
+        $W_{c,t}^{start} \leftarrow \sum_{k \in S_c} \alpha_{c,k} W_{k,t}$\;
+        $W_{c,t}^{end} \leftarrow \text{TreinamentoLocal}(W_{c,t}^{start}, \mathcal{D}_c)$\;
+        Envia $\{W_{c,t}^{end}, S_c\}$ para o servidor\;
+        \BlankLine
+        \textbf{Servidor:}\;
+        \For{cada cluster $k \in \{1, \dots, K\}$}{
+            $W_{k,t+1} \leftarrow \frac{\sum_{c: k \in S_c} n_c W_{c,t}^{end}}{\sum_{c: k \in S_c} n_c}$\;
+        }
+    }
+    \caption{Algoritmo FLASC}
+    \label{alg:flasc}
+\end{algorithm}
