@@ -1,0 +1,46 @@
+\section{Configuração Experimental} \label{sec:experimentos}
+
+Para avaliar o desempenho do FLASC, conduzimos experimentos utilizando o FLSC \cite{li2022federated} como linha de base.
+O objetivo central desta avaliação consiste em qualificar o impacto de substituir a seleção fixa de $N$ modelos por um mecanismo adaptativo baseado na tolerância $\rho$.
+
+\subsection{Implementação e Tecnologias}
+
+A implementação do FLASC utiliza a linguagem Python e o ecossistema de aprendizado de máquina PyTorch.
+Empregamos o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower} para orquestrar a simulação federada, aproveitando a biblioteca \textit{Simulation Engine} para gerenciar o ciclo de vida dos clientes de forma eficiente em termos de recursos computacionais.
+Os dados de treinamento provêm da biblioteca \textit{flwr-datasets}, com pré-processamento para simular partições não independentes e identicamente distribuídas (non-IID).
+O código fonte completo, incluindo as estratégias de baseline e os scripts de reprodução, está disponível publicamente em um repositório no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
+
+\subsection{Cenário Experimental}
+
+Configuramos o ambiente de simulação com 10 nós (clientes) participando de 10 rodadas de treinamento federado.
+Em cada rodada, o servidor seleciona todos os clientes para o treinamento e metade deles para a etapa de avaliação.
+Estabelecemos um conjunto de $K=4$ modelos globais para ambos os algoritmos.
+Os parâmetros de treinamento local incluem 3 épocas, taxa de aprendizado de 0,001 e tamanho de lote de 32 amostras.
+
+Para garantir uma comparação equivalente entre o FLASC e o FLSC, variamos os hiperparâmetros $\rho$ e $N$ de forma correlacionada.
+Enquanto o FLSC seleciona os $N$ modelos com as menores perdas locais e aplica pesos uniformes ($1/N$), o FLASC seleciona dinamicamente os modelos cuja perda normalizada não ultrapassa $\rho$, atribuindo pesos que decrescem linearmente com a perda.
+A Tabela \ref{tab:configs} detalha os pares de valores testados para mapear o comportamento da seleção adaptativa frente à seleção fixa.
+
+\begin{table}[H]
+\centering
+\caption{Configuração dos hiperparâmetros de seleção para comparação.}
+\label{tab:configs}
+\begin{tabular}{lcc}
+\hline
+\textbf{Cenário} & \textbf{FLSC ($N$)} & \textbf{FLASC ($\rho$)} \\ \hline
+Seleção Mínima   & 1                   & 0                       \\
+Seleção Intermediária & 2                   & 0,5                     \\
+Seleção Máxima (Inclusiva)   & 4                   & 1,0                     \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Protocolo de Avaliação}
+
+A avaliação ocorre ao final de cada rodada de treinamento.
+Nesta etapa, o servidor transmite os $K$ modelos globais atualizados para os clientes selecionados.
+Cada cliente avalia individualmente o desempenho de todos os $K$ modelos em seu conjunto de dados de teste local.
+O cliente então identifica o modelo com o melhor desempenho (menor perda empírica) e reporta a acurácia e a perda deste modelo específico ao servidor.
+
+O servidor agrega essas métricas calculando a média ponderada pelo número de amostras locais de cada cliente.
+Este protocolo garante que a métrica final reflita a capacidade do sistema em oferecer, dentro do conjunto de clusters, pelo menos uma solução altamente especializada para cada distribuição de dados local encontrada na rede.
+Dessa forma, avaliamos não apenas a convergência dos modelos, mas a eficácia da especialização promovida pelo agrupamento.

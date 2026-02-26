@@ -8,12 +8,9 @@ impõe restrições de privacidade que impedem essa abordagem centralizada \cite
 
 Para superar esse obstáculo, o Aprendizado Federado (do inglês, \textit{Federated Learning} -- FL)
 surgiu como um paradigma onde cada cliente recebe uma cópia de um modelo global inicial,
-realiza o treinamento localmente com seus próprios dados e,
-em vez de enviar os dados brutos para o servidor,
-transmite apenas as atualizações do modelo \cite{mcmahan2017communication}.
+realiza o treinamento com seus próprios dados e transmite apenas as atualizações do modelo \cite{mcmahan2017communication}.
 O servidor, por sua vez, agrega essas atualizações com uma média ponderada (FedAvg) para criar uma nova versão do modelo global.
-Esse processo, denominado \textit{training round} (rodada de treinamento),
-repete-se iterativamente por um determinado número de vezes até a convergência do modelo global \cite{mcmahan2017communication, li2022federated}.
+Esse processo se repete iterativamente por um determinado número de vezes até a convergência do modelo global \cite{mcmahan2017communication, li2022federated}.
 
 Apesar dos avanços proporcionados pelo FL, sua eficácia é frequentemente desafiada pela heterogeneidade estatística dos dados nos clientes (dados não-IID).
 Essa não uniformidade impacta negativamente a agregação,
@@ -57,10 +54,10 @@ Finalmente, o Aprendizado Federado com Agrupamento Suave (FLSC),
 apresentado por Li et al. \cite{li2022federated}, possibilitou que um cliente pertença a múltiplos clusters simultaneamente.
 Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados reais~\cite{...}.
 Contudo, o método obriga cada cliente a participar de exatamente $N$ clusters, sendo $N$ um hiperparâmetro.
-Além disso, o FLSC negligencia o fato de que o peso de participação do cliente em cada um dos $N$ clusters pode ser diferente.
+Além disso, o FLSC não considera a possibilidade de que o peso de participação do cliente em cada um dos $N$ clusters possa ser diferente.
 
 Para superar essas limitações, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
-Diferente do FLSC, o FLASC permite que a quantidade de clusters integrados varie dinamicamente conforme a necessidade de cada cliente.
+Diferente do FLSC, o FLASC permite que a quantidade de clusters integrados varie conforme a necessidade de cada cliente.
 Além disso, ele propõe uma adaptação mais precisa e robusta à heterogeneidade dos dados ao
 ponderar a contribuição de cada modelo de cluster proporcionalmente à sua afinidade com os dados locais.
 O restante deste trabalho está organizado da seguinte forma:
