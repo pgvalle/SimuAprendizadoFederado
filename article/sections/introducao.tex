@@ -1,65 +1,69 @@
 \section{Introdução}
 
 A crescente digitalização de serviços e a onipresença de dispositivos computacionais pessoais gera um volume de dados distribuídos sem precedentes,
-o que impulsiona o desenvolvimento de soluções baseadas em aprendizado de máquina (ML) \cite{li2022federated, kim2023kfl}.
-Em cenários convencionais, uma solução de ML exigiria a centralização dessas informações em um único servidor para o treinamento.
-No entanto, a típica natureza sensível dos dados distribuídos, como é o caso na área da saúde,
-impõe restrições de privacidade que impedem essa abordagem centralizada \cite{mcmahan2017communication, zhang2025lcfed}.
+o que impulsiona o desenvolvimento de soluções baseadas em aprendizado de máquina (ML).
+Tradicionalmente, uma solução de ML exige que os dados estejam em um único dispositivo.
+No entanto, os dados distribuidos geralmente devem permanecer nos seus dispositivos de origem por questões de privacidade.
+Para superar esse obstáculo, o Aprendizado Federado (do inglês, \textit{Federated Learning} -- FL) surgiu como um paradigma
+onde um servidor mantém um modelo global e distribui cópias para clientes selecionados na rede.
+Nessa arquitetura, os dispositivos realizam o treinamento local com seus próprios dados e transmitem apenas as atualizações dos parâmetros.
+O servidor então agrega essas contribuições via média ponderada (FedAvg) para atualizar o modelo global.
+Todo esse processo se repete por diversas rodadas visando a convergência \cite{mcmahan2017communication, li2022federated}.
 
-Para superar esse obstáculo, o Aprendizado Federado (do inglês, \textit{Federated Learning} -- FL)
-surgiu como um paradigma onde cada cliente recebe uma cópia de um modelo global inicial,
-realiza o treinamento com seus próprios dados e transmite apenas as atualizações do modelo \cite{mcmahan2017communication}.
-O servidor, por sua vez, agrega essas atualizações com uma média ponderada (FedAvg) para criar uma nova versão do modelo global.
-Esse processo se repete iterativamente por um determinado número de vezes até a convergência do modelo global \cite{mcmahan2017communication, li2022federated}.
-
-Apesar dos avanços proporcionados pelo FL, sua eficácia é frequentemente desafiada pela heterogeneidade estatística dos dados nos clientes (dados não-IID).
-Essa não uniformidade impacta negativamente a agregação,
-tornando o modelo global subótimo para a maioria dos participantes \cite{ghosh2020efficient, briggs2020federated}.
-
-Para mitigar esse impacto, uma linha de pesquisa proeminente foca no Aprendizado Federado Clusterizado
+Apesar dos avanços que o FL proporcionou para sistemas de recomendação e para a área da saúde,
+sua eficácia é frequentemente desafiada pela heterogeneidade estatística dos dados nos clientes (dados não-IID).
+Essa heterogeneidade impacta negativamente a agregação, tornando o modelo global subótimo para a maioria dos participantes.
+Com o objetivo de solucionar esse problema, uma linha de pesquisa proeminente foca no Aprendizado Federado Clusterizado
 (do inglês, \textit{Clustered FederatedLearning} -- CFL).
-A intuição por trás do CFL é agrupar clientes com distribuições de dados semelhantes
-e treinar modelos especializados para cada grupo \cite{ghosh2020efficient, briggs2020federated, zhang2025lcfed}.
-Essa abordagem tem demonstrado melhorar significativamente o desempenho em ambientes altamente heterogêneos \cite{li2022federated, kim2023kfl}.
+A intuição por trás do CFL é agrupar clientes com distribuições de dados semelhantes e treinar modelos especializados para cada grupo.
+Essa abordagem tem demonstrado melhorar significativamente o desempenho em ambientes heterogêneos.
 
-Briggs et al. \cite{briggs2020federated} introduziram o FL+HC,
-que aplica agrupamento hierárquico sobre a distância euclidiana dos pesos das atualizações.
-A principal limitação dessa estratégia reside no fato de que,
-uma vez que o modelo é cindido em clusters independentes,
-a troca de conhecimento entre eles é permanentemente interrompida.
-Essa segmentação estrita impede que clientes em clusters distintos,
-mas com características latentes comuns,
-continuem a se beneficiar de uma base de conhecimento compartilhada.
 
-Buscando otimizar o momento da clusterização,
-o método K-FL \cite{kim2023kfl} emprega um Filtro de Kalman para monitorar a tendência da acurácia e decidir o instante ideal para o agrupamento.
-Apesar da inovação no uso de filtros estocásticos para lidar com o ruído das atualizações,
-o K-FL ainda mantém a premissa de fronteiras rígidas (\textit{hard boundaries}),
-onde um dispositivo é sumariamente excluído de um cluster caso sua performance divirja da média,
-uma decisão que pode ser prematura em cenários de alta variância nos dados.
+Briggs et al. \cite{briggs2020federated} propõe uma estratégia de CFL que tenta determinar o numero de agrupamentos
+com o algoritmo de agrupamento hierarquico.
+O problema é que o agrupamento hierárquico gera grupos disjuntos,
+e é natural que um cliente possa ter dados que se encaixem em multiplos grupos.
+Outro ponto é que o agrupamento acontece em uma rodada arbitrária.
+Se o agrupamento for subótimo, isso impacta todo o restante do treinamento.
 
-Para mitigar o \textit{overhead} de comunicação,
-Zhang et al. \cite{zhang2025lcfed} propuseram o LCFed,
-que utiliza a divisão do modelo (\textit{model splitting}) e aproximações de baixo posto (\textit{low-rank}) para calcular similaridades de forma eficiente.
-No entanto, o LCFed ainda restringe a decisão final do cliente a um único submodelo,
-limitando a expressividade da personalização em casos onde o perfil de dados do cliente transita entre diferentes distribuições.
+% ... et al.
+% Porém esse método falha ao dele
+% Buscando otimizar o momento da clusterização,
+% o método K-FL \cite{kim2023kfl} emprega um Filtro de Kalman para monitorar a tendência da acurácia e decidir o instante ideal para o agrupamento.
+% Apesar da inovação no uso de filtros estocásticos para lidar com o ruído das atualizações,
+% o K-FL ainda mantém a premissa de fronteiras rígidas (\textit{hard boundaries}),
+% onde um dispositivo é sumariamente excluído de um cluster caso sua performance divirja da média,
+% uma decisão que pode ser prematura em cenários de alta variância nos dados.
 
-No algoritmo IFCA, proposto por Ghosh et al. \cite{ghosh2020efficient},
-o servidor mantém múltiplos modelos globais e os transmite aos clientes.
-Cada participante avalia os modelos recebidos e seleciona aquele que minimiza sua perda empírica local para realizar o treinamento.
-Essa abordagem exige que o cliente se vincule estritamente a um único modelo por rodada,
-o que pode negligenciar conhecimento potencialmente útil dos modelos de outros clusters.
+% Para mitigar o \textit{overhead} de comunicação,
+% Zhang et al. \cite{zhang2025lcfed} propuseram o LCFed,
+% que utiliza a divisão do modelo (\textit{model splitting}) e aproximações de baixo posto (\textit{low-rank}) para calcular similaridades de forma eficiente.
+% No entanto, o LCFed ainda restringe a decisão final do cliente a um único submodelo,
+% limitando a expressividade da personalização em casos onde o perfil de dados do cliente transita entre diferentes distribuições.
 
-Finalmente, o Aprendizado Federado com Agrupamento Suave (FLSC),
-apresentado por Li et al. \cite{li2022federated}, possibilitou que um cliente pertença a múltiplos clusters simultaneamente.
+% No IFCA, proposto por Ghosh et al. \cite{ghosh2020efficient},
+% o servidor mantém múltiplos modelos globais e os transmite aos clientes.
+% Cada participante avalia os modelos recebidos e seleciona aquele que minimiza sua perda empírica local para realizar o treinamento.
+% Terminado o treinamento, ele envia o modelo treinado de volta para o servidor junto do identificador de qual modelo usou.
+% Essa abordagem exige que o cliente se vincule estritamente a um grupo por rodada,
+% o que negligencia o uso de conhecimento potencialmente útil de outros grupos.
+
+, o Aprendizado Federado com Agrupamento Suave (FLSC),
+apresentado por Li et al. \cite{li2022federated}, possibilitou que os clientes pertençam a múltiplos grupos simultaneamente.
 Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados reais~\cite{...}.
-Contudo, o método obriga cada cliente a participar de exatamente $N$ clusters, sendo $N$ um hiperparâmetro.
-Além disso, o FLSC não considera a possibilidade de que o peso de participação do cliente em cada um dos $N$ clusters possa ser diferente.
+Contudo, o método impõe um número fixo de grupos para todos os clientes participarem,
+e o peso de participação do cliente em qualquer grupo é sempre igual.
+Isso não reflete um cenário real.
+Por exemplo, num sistema de recomendação,
+conteudos do tipo A e B podem estar num cliente c1, enquanto outro cliente c2 tem conteudos do tipo B, C, D e E.
+É natural pensar que c1 participe de menos grupos que c2.
+Além disso, não necessariamente todos conteúdos vão ser recomendados na mesma frequência.
+Pode ser que c2 consuma muito conteudo do tipo B, consequentemente gerando muito mais dados do tipo B.
+Logo faz sentido pensar que c2 participe bem mais do grupo que inclui conteudo do tipo B.
 
-Para superar essas limitações, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
-Diferente do FLSC, o FLASC permite que a quantidade de clusters integrados varie conforme a necessidade de cada cliente.
-Além disso, ele propõe uma adaptação mais precisa e robusta à heterogeneidade dos dados ao
-ponderar a contribuição de cada modelo de cluster proporcionalmente à sua afinidade com os dados locais.
+Visando superar essas limitações, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
+Diferente do FLSC, o FLASC permite não só que a quantidade de grupos que um cliente participa se ajuste conforme a sua distribuição local,
+como também ele pondera o nivel de participação do cliente em cada grupo de acordo com seus dados locais.
 O restante deste trabalho está organizado da seguinte forma:
 a Seção \ref{sec:proposta} descreve detalhadamente o funcionamento do algoritmo FLASC;
 a Seção \ref{sec:metodologia} apresenta a metodologia de avaliação e o ambiente experimental;

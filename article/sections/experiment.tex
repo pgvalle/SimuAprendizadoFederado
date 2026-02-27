@@ -1,25 +1,11 @@
 \section{Configuração Experimental} \label{sec:experimentos}
 
-Para avaliar o desempenho do FLASC, conduzimos experimentos utilizando o FLSC \cite{li2022federated} como linha de base.
-O objetivo central desta avaliação consiste em qualificar o impacto de substituir a seleção fixa de $N$ modelos por um mecanismo adaptativo baseado na tolerância $\rho$.
-
-\subsection{Implementação e Tecnologias}
-
-A implementação do FLASC utiliza a linguagem Python e o ecossistema de aprendizado de máquina PyTorch.
-Empregamos o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower} para orquestrar a simulação federada, aproveitando a biblioteca \textit{Simulation Engine} para gerenciar o ciclo de vida dos clientes de forma eficiente em termos de recursos computacionais.
-Os dados de treinamento provêm da biblioteca \textit{flwr-datasets}, com pré-processamento para simular partições não independentes e identicamente distribuídas (non-IID).
-O código fonte completo, incluindo as estratégias de baseline e os scripts de reprodução, está disponível publicamente em um repositório no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
-
-\subsection{Cenário Experimental}
-
-Configuramos o ambiente de simulação com 10 nós (clientes) participando de 10 rodadas de treinamento federado.
-Em cada rodada, o servidor seleciona todos os clientes para o treinamento e metade deles para a etapa de avaliação.
-Estabelecemos um conjunto de $K=4$ modelos globais para ambos os algoritmos.
-Os parâmetros de treinamento local incluem 3 épocas, taxa de aprendizado de 0,001 e tamanho de lote de 32 amostras.
-
-Para garantir uma comparação equivalente entre o FLASC e o FLSC, variamos os hiperparâmetros $\rho$ e $N$ de forma correlacionada.
-Enquanto o FLSC seleciona os $N$ modelos com as menores perdas locais e aplica pesos uniformes ($1/N$), o FLASC seleciona dinamicamente os modelos cuja perda normalizada não ultrapassa $\rho$, atribuindo pesos que decrescem linearmente com a perda.
-A Tabela \ref{tab:configs} detalha os pares de valores testados para mapear o comportamento da seleção adaptativa frente à seleção fixa.
+Para avaliar o desempenho do FLASC, foram conduzidos experimentos utilizando o FLSC \cite{li2022federated} como linha de base.
+O objetivo central da avaliação é qualificar o impacto de substituir o hiperparâmetro $N$ por $\rho$ (Veja a sessão ...).
+Para garantir uma comparação equivalente entre os dois algoritmos,
+variamos os hiperparâmetros $\rho$ e $N$ de forma correlacionada, conforme detalhado na Tabela \ref{tab:configs}.
+Note que $N = 2$ significa que metade dos modelos serão selecionados.
+Para reproduzir o equivalente com $\rho$,
 
 \begin{table}[H]
 \centering
@@ -33,6 +19,30 @@ Seleção Intermediária & 2                   & 0,5                     \\
 Seleção Máxima (Inclusiva)   & 4                   & 1,0                     \\ \hline
 \end{tabular}
 \end{table}
+
+Para os experimentos, utilizamos o conjunto de dados CIFAR-10,
+que composto por 60.000 imagens coloridas de $32 \times 32$ pixels, distribuídas em 10 classes distintas.
+
+A implementação do FLASC utiliza o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower} com pytorch para orquestrar a simulação.
+O código fonte completo, incluindo as estratégias de baseline e os scripts de reprodução,
+está disponível publicamente em um repositório no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
+
+Quando ao particionamento dos dados, foi utilizado uma distribuição de Dirichlet com $\alpha = 0,5$
+para refletir um cenário onde a distribuição de dados é desequilibrada.
+Cada cliente divide sua partição local em 80\% para treinamento e 20\% para avaliação.
+
+O modelo arquitetural adotado consiste em uma Rede Neural Convolucional (CNN) simples,
+composta por duas camadas de convolução seguidas por camadas totalmente conectadas.
+A primeira camada convolucional possui 6 filtros de tamanho $5 \times 5$,
+enquanto a segunda possui 16 filtros de mesmo tamanho, ambas seguidas por operações de \textit{max-pooling} de $2 \times 2$.
+As camadas densas subsequentes possuem 120, 84 e, finalmente, 10 neurônios na camada de saída, correspondendo às classes do CIFAR-10.
+Foi utilizada a função de ativação ReLU em todas as camadas ocultas e o otimizador SGD com momento de $0,9$.
+A função de perda adotada tanto para o treinamento local quanto para a avaliação de desempenho é a Entropia Cruzada (\textit{Cross-Entropy Loss}).
+
+Configuramos o ambiente de simulação com 10 nós (clientes) participando de 10 rodadas de treinamento federado.
+Em cada rodada, o servidor seleciona todos os clientes para o treinamento e metade deles para a etapa de avaliação.
+Estabelecemos um conjunto de $K=4$ modelos globais para ambos os algoritmos.
+Os parâmetros de treinamento local incluem 3 épocas, taxa de aprendizado de 0,001 e tamanho de lote de 32 amostras.
 
 \subsection{Protocolo de Avaliação}
 

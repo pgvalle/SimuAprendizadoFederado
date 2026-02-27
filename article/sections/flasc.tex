@@ -2,29 +2,29 @@
 
 O algoritmo FLASC (\textit{Federated Learning with Adaptive Soft Clustering}) estende o FLSC \cite{li2022federated}
 ao introduzir um mecanismo de atribuição de cluster mais flexível e sensível à distribuição local.
-O processo inicia-se no servidor, que mantém um conjunto de $K$ modelos globais $\mathcal{W} = \{W_{1}, W_{2}, \dots, W_{K}\}$.
-Em cada rodada de treinamento $t$, o servidor seleciona aleatoriamente uma fração de clientes participantes e transmite os $K$ modelos a eles.
+O funcionamento do flasc se resume
 
-Ao receber os modelos, o cliente $c$ avalia a perda empírica de cada um utilizando seu conjunto de dados local $\mathcal{D}_c$.
-A Equação \ref{eq:loss_eval} descreve a obtenção da perda $L_{c,k}$ do $k$-ésimo modelo no cliente $c$.
+O processo inicia-se no servidor, que mantém um conjunto de $k$ modelos globais $\mathcal{W} = \{W_{1}, W_{2}, \dots, W_{k}\}$.
+Em cada rodada de treinamento, o servidor seleciona aleatoriamente uma fração de clientes participantes e transmite $\mathcal{W}$ para eles.
+Ao receber os modelos, o cliente $c$ calcula as perdas utilizando seu conjunto de dados $\mathcal{D}_c$ conforme a Equação \ref{eq:loss_eval}.
 \begin{equation}
-    L_{c,k} = \text{Loss}(W_{k}; \mathcal{D}_c) \label{eq:loss_eval}
+    L_{c,i} = \text{EntropiaCrusada}(W_{i}; \mathcal{D}_c), \quad i \in \{1, 2, \dots, k\} \label{eq:loss_eval}
 \end{equation}
 
-A etapa de seleção depende da dispersão das perdas observadas, onde o cliente define $L_{min} = \min_k \{L_{c,k}\}$ e $L_{max} = \max_k \{L_{c,k}\}$.
-Caso a diferença entre o melhor e o pior desempenho seja desprezível ($L_{max} - L_{min} \leq \epsilon$), o algoritmo trata os modelos como indistinguíveis.
+Com as perdas calculadas, o cliente verifica a diferença entre a maior e a menor perda ($L_{max} - L_{min}$).
+Caso a diferença seja desprezível ($L_{max} - L_{min} \leq \epsilon$), o algoritmo trata os modelos como indistinguíveis.
 Caso contrário, a Equação \ref{eq:normalization} normaliza as perdas no intervalo $[0, 1]$.
 \begin{equation}
-    \hat{L}_{c,k} = \frac{L_{c,k} - L_{min}}{L_{max} - L_{min}} \label{eq:normalization}
+    \hat{L}_{c,i} = \frac{L_{c,i} - L_{min}}{L_{max} - L_{min}}, \quad i \in \{1, 2, \dots, k\} \label{eq:normalization}
 \end{equation}
 
-Dessa forma, o cliente define o conjunto de índices $S_c$ dos modelos selecionados de acordo com
-a sensibilidade $\epsilon$ e o fator de tolerância $\rho$ (Equação \ref{eq:selection_set}).
+Em seguida, o cliente calcula o conjunto de índices $S_c$ dos modelos selecionados (Equação \ref{eq:selection_set}).
 Em casos de indistinguibilidade, o cliente seleciona aleatoriamente um único modelo.
+Note também que mesmo se $\epsilon \eq 0$, pelo menos um modelo será selecionado.
 \begin{equation}
     S_c = \begin{cases}
-      \{k'\}, \text{ com } k' \sim \text{Unif}\{1, \dots, K\}, & \text{se } L_{max} - L_{min} \leq \epsilon \\
-      \{k \mid \hat{L}_{c,k} \leq \rho\}, & \text{caso contrário}
+      \{i'\}, \text{ com } i' \sim \text{Unif}\{1, \dots, k\}, & \text{se } L_{max} - L_{min} \leq \epsilon \\
+      \{i \mid \hat{L}_{c,i} \leq \rho\}, & \text{caso contrário}
     \end{cases} \label{eq:selection_set}
 \end{equation}
 
