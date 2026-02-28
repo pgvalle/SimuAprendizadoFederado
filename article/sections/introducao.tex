@@ -18,14 +18,12 @@ Com o objetivo de solucionar esse problema, uma linha de pesquisa proeminente fo
 A intuição por trás do CFL é agrupar clientes com distribuições de dados semelhantes e treinar modelos especializados para cada grupo.
 Essa abordagem tem demonstrado melhorar significativamente o desempenho em ambientes heterogêneos.
 
-
-Briggs et al. \cite{briggs2020federated} propõe uma estratégia de CFL que tenta determinar o numero de agrupamentos
-com o algoritmo de agrupamento hierarquico.
+precisa ser determinado com o algoritmo.
+Briggs et al. \cite{briggs2020federated} propõe uma estratégia de CFL que tenta determinar esse número com o algoritmo de agrupamento hierarquico.
 O problema é que o agrupamento hierárquico gera grupos disjuntos,
 e é natural que um cliente possa ter dados que se encaixem em multiplos grupos.
 Outro ponto é que o agrupamento acontece em uma rodada arbitrária.
 Se o agrupamento for subótimo, isso impacta todo o restante do treinamento.
-
 % ... et al.
 % Porém esse método falha ao dele
 % Buscando otimizar o momento da clusterização,
@@ -35,37 +33,44 @@ Se o agrupamento for subótimo, isso impacta todo o restante do treinamento.
 % onde um dispositivo é sumariamente excluído de um cluster caso sua performance divirja da média,
 % uma decisão que pode ser prematura em cenários de alta variância nos dados.
 
+Outras estratégias de CFL assumem um número de agrupamentos conhecido.
+
 % Para mitigar o \textit{overhead} de comunicação,
 % Zhang et al. \cite{zhang2025lcfed} propuseram o LCFed,
 % que utiliza a divisão do modelo (\textit{model splitting}) e aproximações de baixo posto (\textit{low-rank}) para calcular similaridades de forma eficiente.
 % No entanto, o LCFed ainda restringe a decisão final do cliente a um único submodelo,
 % limitando a expressividade da personalização em casos onde o perfil de dados do cliente transita entre diferentes distribuições.
 
-% No IFCA, proposto por Ghosh et al. \cite{ghosh2020efficient},
-% o servidor mantém múltiplos modelos globais e os transmite aos clientes.
-% Cada participante avalia os modelos recebidos e seleciona aquele que minimiza sua perda empírica local para realizar o treinamento.
-% Terminado o treinamento, ele envia o modelo treinado de volta para o servidor junto do identificador de qual modelo usou.
-% Essa abordagem exige que o cliente se vincule estritamente a um grupo por rodada,
-% o que negligencia o uso de conhecimento potencialmente útil de outros grupos.
+No IFCA, proposto por Ghosh et al. \cite{ghosh2020efficient},
+o servidor mantém múltiplos modelos globais e os transmite aos clientes.
+Cada participante avalia os modelos recebidos com seus próprios dados e seleciona aquele que possui menor perda como base para o treinamento.
+Terminado o treinamento, ele envia o modelo treinado de volta para o servidor junto do identificador de qual modelo usou.
+No servidor, cada modelo global é atualizado somente com os clientes que os utilizaram para treinar.
+O IFCA exige que o cliente se vincule estritamente a um grupo por rodada,
+o que limita a possibilidade de usar conhecimento de outros grupos localmente.
+Isso também limita contribuição do cliente na atualização do modelos globais,
+já que só o modelo do grupo que ele escolheu vai se beneficiar.
 
-, o Aprendizado Federado com Agrupamento Suave (FLSC),
-apresentado por Li et al. \cite{li2022federated}, possibilitou que os clientes pertençam a múltiplos grupos simultaneamente.
-Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados reais~\cite{...}.
+Li et al. \cite{li2022federated} apresenta o Aprendizado Federado com Agrupamento Suave (FLSC) como uma melhoria do IFCA.
+Essa melhoria possibilitou aos clientes pertencerem a múltiplos grupos simultaneamente.
+Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados não-IID em relação ao seu antessesor~\cite{...}.
 Contudo, o método impõe um número fixo de grupos para todos os clientes participarem,
 e o peso de participação do cliente em qualquer grupo é sempre igual.
-Isso não reflete um cenário real.
+Isso ainda não reflete perfeitamente um cenário real.
 Por exemplo, num sistema de recomendação,
 conteudos do tipo A e B podem estar num cliente c1, enquanto outro cliente c2 tem conteudos do tipo B, C, D e E.
-É natural pensar que c1 participe de menos grupos que c2.
+É natural pensar que c1 participe de menos grupos de recomendação que c2.
 Além disso, não necessariamente todos conteúdos vão ser recomendados na mesma frequência.
 Pode ser que c2 consuma muito conteudo do tipo B, consequentemente gerando muito mais dados do tipo B.
 Logo faz sentido pensar que c2 participe bem mais do grupo que inclui conteudo do tipo B.
 
-Visando superar essas limitações, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
-Diferente do FLSC, o FLASC permite não só que a quantidade de grupos que um cliente participa se ajuste conforme a sua distribuição local,
-como também ele pondera o nivel de participação do cliente em cada grupo de acordo com seus dados locais.
+Visando superar as limitações do FLSC, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
+Diferente do FLSC, o FLASC permite não só que a quantidade de grupos que um cliente participe se ajuste conforme a sua distribuição local,
+como ele também pondera o peso de participação do cliente em cada grupo.
+Experimentos ...
+
 O restante deste trabalho está organizado da seguinte forma:
-a Seção \ref{sec:proposta} descreve detalhadamente o funcionamento do algoritmo FLASC;
-a Seção \ref{sec:metodologia} apresenta a metodologia de avaliação e o ambiente experimental;
-a Seção \ref{sec:resultados} expõe e discute os resultados obtidos;
-e, finalmente, a Seção \ref{sec:conclusao} traz as considerações finais e propostas de trabalhos futuros.
+a Seção \ref{sec:flasc} descreve detalhadamente o funcionamento do algoritmo FLASC;
+a Seção \ref{sec:experiment} apresenta a metodologia de avaliação e o ambiente experimental;
+a Seção \ref{sec:results} expõe e discute os resultados obtidos;
+e, finalmente, a Seção \ref{sec:conclusion} traz as considerações finais e propostas de trabalhos futuros.
