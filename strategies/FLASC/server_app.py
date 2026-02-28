@@ -5,7 +5,7 @@ from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
 from flwr.serverapp import Grid, ServerApp
 
 from common.strategy import ClusterStrategy
-from common.task import Net, load_centralized_dataset, test
+from common.task import Net, load_centralized_dataset, set_all_seeds, test
 
 # Create ServerApp
 app = ServerApp()
@@ -14,6 +14,8 @@ app = ServerApp()
 @app.main()
 def main(grid: Grid, context: Context) -> None:
     """Main entry point for the ServerApp."""
+
+    set_all_seeds()
 
     # Read run config
     fraction_train = float(context.run_config["fraction-train"])

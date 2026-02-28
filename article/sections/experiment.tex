@@ -4,8 +4,9 @@ A avaliação do FLASC baseia-se na comparação direta com o FLSC \cite{li2022f
 adotado como linha de base para quantificar o impacto da substituição
 do parâmetro rígido de seleção $N$ pelo limiar adaptativo $\rho$.
 Conforme detalhado na Tabela \ref{tab:configs}, os hiperparâmetros
-de ambos os algoritmos variam de forma correlacionada para permitir comparar os algoritmos
+de ambos os algoritmos variam de forma correlacionada para permitir uma comparação
 em cenários de seleção unitária até inclusão total de modelos ($K=4$).
+O hiperparâmetro $\epsilon$ do FLASC foi fixado em $1 \times 10^{-5}$.
 
 \begin{table}[H]
 \centering
@@ -22,7 +23,7 @@ Máxima                      & 4                   & 1                       \\ 
 
 Para simular um ambiente de heterogeneidade de dados (\textit{non-IID}),
 foi utilizado o conjunto de dados CIFAR-10 \cite{krizhevsky2009learning}
-distribuído via partição de Dirichlet com $\alpha = 0,5$ \cite{hsu2019measuring}.
+distribuído via partição de Dirichlet com $\alpha = 0,2$ \cite{hsu2019measuring}.
 Esse cenário reflete redes federadas reais, onde a distribuição de classes
 é desequilibrada entre os nós.
 No total, a simulação compreende 10 clientes participando de 10 rodadas
@@ -37,16 +38,13 @@ O treinamento foi conduzido com otimizador SGD (momento $0,9$), taxa de aprendiz
 Em cada rodada, os clientes executam $3$ épocas de treinamento local antes de reportar as atualizações ao servidor.
 O código completo e os scripts de reprodução estão disponíveis no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
 
-\subsection{Protocolo de Avaliação}
+\subsection{Protocolo de avaliação}
 
 Ao final de cada rodada de treinamento, o servidor transmite os $K$ modelos globais atualizados para os clientes selecionados.
 Cada nó avalia individualmente o desempenho de todo o conjunto $\mathcal{W}_t$ em seu conjunto de teste local
 e identifica o modelo que apresenta a menor perda empírica.
-Uma vez identificado o melhor candidato para sua distribuição local,
-o cliente reporta a acurácia e a perda deste modelo específico ao servidor.
-A métrica global é então obtida através da média ponderada dessas respostas,
-garantindo que o resultado final reflita a eficácia do algoritmo em oferecer,
-dentro do conjunto de clusters, ao menos uma solução altamente compatível com a realidade de cada cliente.
+Uma vez identificado o melhor candidato, o cliente reporta a acurácia e a perda deste modelo específico ao servidor.
+As métricas globais são então obtidas através da média ponderada dessas respostas.
 
 \subsection{Expectativas}
 

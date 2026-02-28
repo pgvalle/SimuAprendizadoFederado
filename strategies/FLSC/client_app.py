@@ -7,7 +7,7 @@ import torch
 from flwr.app import Array, ArrayRecord, Context, Message, MetricRecord, RecordDict
 from flwr.clientapp import ClientApp
 
-from common.task import Net, load_data
+from common.task import Net, load_data, set_all_seeds
 from common.task import test as test_fn
 from common.task import train as train_fn
 
@@ -32,6 +32,8 @@ def select_models(losses: list[float], n: int):
 @app.train()
 def train(msg: Message, context: Context):
     """Train the model on local data."""
+
+    set_all_seeds()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -105,6 +107,8 @@ def train(msg: Message, context: Context):
 @app.evaluate()
 def evaluate(msg: Message, context: Context):
     """Evaluate the model on local data."""
+
+    set_all_seeds()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

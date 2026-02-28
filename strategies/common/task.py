@@ -1,13 +1,39 @@
 """pytorchexample: A Flower / PyTorch app."""
 
+import os
+import random
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from datasets import load_dataset
 from flwr_datasets import FederatedDataset
-from flwr_datasets.partitioner import DirichletPartitioner, IidPartitioner
+from flwr_datasets.partitioner import DirichletPartitioner
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, Normalize, ToTensor
+
+SEED = 42
+
+
+def set_all_seeds(seed: int = SEED):
+    """
+    Attempts to ensure reproducibility by setting seeds for all major
+    random number generators.
+    """
+
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+    torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(True)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 class Net(nn.Module):
@@ -38,6 +64,7 @@ pytorch_transforms = Compose([ToTensor(), Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 
 
 def apply_transforms(batch):
     """Apply transforms to the partition from FederatedDataset."""
+
     batch["img"] = [pytorch_transforms(img) for img in batch["img"]]
     return batch
 
@@ -48,23 +75,35 @@ def load_data(partition_id: int, num_partitions: int, batch_size: int):
     # Only initialize `FederatedDataset` once
     global fds
     if fds is None:
-        # partitioner = IidPartitioner(num_partitions=num_partitions)
         partitioner = DirichletPartitioner(
             num_partitions=num_partitions,
             partition_by="label",
-            alpha=0.5,
+            alpha=0.1,
+            shuffle=False,
+            seed=SEED,
         )
         fds = FederatedDataset(
             dataset="uoft-cs/cifar10",
             partitioners={"train": partitioner},
+            shuffle=False,
+            seed=SEED,
         )
+
     partition = fds.load_partition(partition_id)
     # Divide data on each node: 80% train, 20% test
-    partition_train_test = partition.train_test_split(test_size=0.2)
+    partition_train_test = partition.train_test_split(test_size=0.2, seed=SEED)
     # Construct dataloaders
     partition_train_test = partition_train_test.with_transform(apply_transforms)
-    trainloader = DataLoader(partition_train_test["train"], batch_size=batch_size)
-    testloader = DataLoader(partition_train_test["test"], batch_size=batch_size)
+    trainloader = DataLoader(
+        partition_train_test["train"],
+        batch_size=batch_size,
+        shuffle=False,
+    )
+    testloader = DataLoader(
+        partition_train_test["test"],
+        batch_size=batch_size,
+        shuffle=False,
+    )
     return trainloader, testloader
 
 
