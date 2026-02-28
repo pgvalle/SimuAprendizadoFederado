@@ -1,117 +1,72 @@
 \section{FLASC} \label{sec:proposta}
 
-O algoritmo FLASC (\textit{Federated Learning with Adaptive Soft Clustering}) estende o FLSC \cite{li2022federated}
-ao introduzir um mecanismo de atribuição de cluster mais flexível e sensível à distribuição local.
-O funcionamento do flasc se resume
+O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo do FLASC.
 
-O processo inicia-se no servidor, que mantém um conjunto de $k$ modelos globais $\mathcal{W} = \{W_{1}, W_{2}, \dots, W_{k}\}$.
-Em cada rodada de treinamento, o servidor seleciona aleatoriamente uma fração de clientes participantes e transmite $\mathcal{W}$ para eles.
-Ao receber os modelos, o cliente $c$ calcula as perdas utilizando seu conjunto de dados $\mathcal{D}_c$ conforme a Equação \ref{eq:loss_eval}.
-\begin{equation}
-    L_{c,i} = \text{EntropiaCrusada}(W_{i}; \mathcal{D}_c), \quad i \in \{1, 2, \dots, k\} \label{eq:loss_eval}
-\end{equation}
-
-Com as perdas calculadas, o cliente verifica a diferença entre a maior e a menor perda ($L_{max} - L_{min}$).
-Caso a diferença seja desprezível ($L_{max} - L_{min} \leq \epsilon$), o algoritmo trata os modelos como indistinguíveis.
-Caso contrário, a Equação \ref{eq:normalization} normaliza as perdas no intervalo $[0, 1]$.
-\begin{equation}
-    \hat{L}_{c,i} = \frac{L_{c,i} - L_{min}}{L_{max} - L_{min}}, \quad i \in \{1, 2, \dots, k\} \label{eq:normalization}
-\end{equation}
-
-Em seguida, o cliente calcula o conjunto de índices $S_c$ dos modelos selecionados (Equação \ref{eq:selection_set}).
-Em casos de indistinguibilidade, o cliente seleciona aleatoriamente um único modelo.
-Note também que mesmo se $\epsilon \eq 0$, pelo menos um modelo será selecionado.
-\begin{equation}
-    S_c = \begin{cases}
-      \{i'\}, \text{ com } i' \sim \text{Unif}\{1, \dots, k\}, & \text{se } L_{max} - L_{min} \leq \epsilon \\
-      \{i \mid \hat{L}_{c,i} \leq \rho\}, & \text{caso contrário}
-    \end{cases} \label{eq:selection_set}
-\end{equation}
-
-Com os modelos selecionados, o FLASC atribui pesos $\alpha_{c,k}$ que decrescem linearmente com as perdas normalizadas (Equação \ref{eq:fusion_weights}).
-Note que, se o cliente seleciona um único modelo, este deve receber peso total ($1$).
-\begin{equation}
-    \alpha_{c,k} = \frac{1 - L_{c,k}}{\sum_{j \in S_c}(1 - L_{c,j})} \label{eq:fusion_weights}
-\end{equation}
-
-A Listagem \ref{code:flasc_select} apresenta a implementação em Python da lógica de seleção.
-O código recebe o vetor das perdas de cada modelo, $\rho$ e $\epsilon$, e retorna o conjunto $S_c$ e os pesos de fusão.
-
-\begin{lstlisting}[language=Python, caption={Lógica de seleção adaptativa no cliente FLASC.},
-label={code:flasc_select}, frame=lines, numbers=left, basicstyle=\footnotesize\ttfamily, keywordstyle=\color{blue}]
-def select_models(losses, rho, epsilon=1e-5):
-    lmin, lmax = min(losses), max(losses)
-
-    # Caso de indistinguibilidade
-    if (lmax - lmin) <= epsilon:
-        k = np.random.choice(len(losses))
-        return [k], [1.0]
-
-    # Selecao baseada em tolerancia (rho)
-    Sc, raw_weights = [], []
-    for k, lck in enumerate(losses):
-        # Normalizacao das perdas
-        norm_lck = (lck - lmin) / (lmax - lmin)
-        if norm_lck <= rho:
-            Sc.append(k)
-            # melhor perda = maior peso
-            raw_weights.append(1.0 - norm_lck)
-
-    # calculo dos pesos
-    total = sum(raw_weights)
-    weights = [w / total for w in raw_weights]
-    return Sc, weights
-\end{lstlisting}
-
-Após a seleção, o cliente constrói o modelo de partida para o treinamento local $W_{c}^{start}$
-através da agregação dos modelos selecionados ($W_{c}^{start} = \sum_{k \in S_c} \alpha_{c,k} W_{k}$).
-Após o treinamento por $E$ épocas, o cliente envia o modelo resultante $W_{c}^{end}$ e o conjunto de identificadores $S_c$ ao servidor.
-
-O servidor atualiza os modelos globais de forma independente.
-Para cada cluster $k$, o servidor agrega apenas as atualizações dos clientes que incluíram o modelo $k$ em sua fusão ($k \in S_c$),
-seguindo a Equação \ref{eq:aggregation}, onde $n_c$ representa o número de amostras locais.
-\begin{equation}
-    W_{k}^{new} = \frac{\sum_{c: k \in S_c} n_c W_{c}^{end}}{\sum_{c: k \in S_c} n_c} \label{eq:aggregation}
-\end{equation}
-
-% não gostei disso. me parece errado
-Esta arquitetura permite que os clusters evoluam para representar especializações distintas, enquanto a natureza \textit{soft} da seleção garante que os clientes se beneficiem de múltiplos domínios de conhecimento.
-O hiperparâmetro $\rho$ regula essa generalização: valores próximos a 0 aproximam o FLASC de abordagens de \textit{hard clustering} como o IFCA \cite{ghosh2020efficient}, enquanto valores próximos a 1 replicam a fusão inclusiva do FLSC \cite{li2022federated}.
-O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo.
-
-% tem que acertar isso aqui
 \begin{algorithm}[H]
     \SetAlgoLined
-    \KwIn{Parâmetros iniciais $w_0$, tolerância $\rho$, sensibilidade $\epsilon$}
+    \KwIn{Parâmetros iniciais $K$, tolerância $\rho$, sensibilidade $\epsilon$}
     \KwData{Conjuntos de dados locais $\{\mathcal{D}_c\}$ nos clientes}
     \BlankLine
-    \textbf{Servidor:} Inicializa $K$ modelos de cluster $\mathcal{W}_0 = \{W_{1,0}, \dots, W_{K,0}\}$ com $w_0$\;
-    \For{cada rodada $t = 0, 1, \dots, T$}{
+    \textbf{Servidor:} Inicializa $\mathcal{W}_1 = \{W_{1,1}, \dots, W_{K,1}\}$\;
+    \BlankLine
+    \For{cada rodada $t = 1, \dots, T$}{
         Servidor seleciona aleatoriamente um subconjunto de clientes $P_t$\;
         Servidor transmite $\mathcal{W}_t$ para todos os clientes em $P_t$\;
         \BlankLine
-        \textbf{Cada cliente $c \in P_t$ em paralelo:}\;
-        Avalia perdas locais $L_{c,k} = \text{Loss}(W_{k,t}; \mathcal{D}_c)$ para $k \in \{1, \dots, K\}$\;
-        $L_{min} \leftarrow \min_k \{L_{c,k}\}$, $L_{max} \leftarrow \max_k \{L_{c,k}\}$\;
-        \If{$L_{max} - L_{min} \leq \epsilon$}{
-            $S_c \leftarrow \{ \text{índice aleatório de } \{1, \dots, K\} \}$\;
-            $\alpha_{c,k} \leftarrow 1.0$ para $k \in S_c$\;
+        \textbf{Cada cliente $c \in P_t$ em paralelo:}\\
+        Calcula perdas locais $L_{c,i} = \text{EntropiaCruzada}(W_{i,t}, \mathcal{D}_c)$ para $i \in \{1, \dots, K\}$\;
+        $L_{min} \leftarrow \min_i \{L_{c,i}\}$, $L_{max} \leftarrow \max_i \{L_{c,i}\}$\;
+        \eIf{$L_{max} - L_{min} \leq \epsilon$}{
+            $i' \sim \text{Unif}\{1, \dots, K\}$, $S_c \leftarrow \{i'\}$\;
+            $\alpha_{c,i'} \leftarrow 1$\;
+        }{
+            $\hat{L}_{c,i} \leftarrow \frac{L_{c,i} - L_{min}}{L_{max} - L_{min}}$ para cada $i \in \{1, \dots, K\}$\;
+            $S_c \leftarrow \{i \mid \hat{L}_{c,i} \leq \rho\}$\;
+            $\alpha_{c,i} \leftarrow \frac{1 - \hat{L}_{c,i}}{\sum\limits_{j \in S_c} (1 - \hat{L}_{c,j})}$ para cada $i \in S_c$\;
         }
-        \Else{
-            $\hat{L}_{c,k} \leftarrow \frac{L_{c,k} - L_{min}}{L_{max} - L_{min}}$ para cada $k$\;
-            $S_c \leftarrow \{k \mid \hat{L}_{c,k} \leq \rho\}$\;
-            $v_{c,k} \leftarrow 1 - \hat{L}_{c,k}$ para $k \in S_c$\;
-            $\alpha_{c,k} \leftarrow v_{c,k} / \sum_{j \in S_c} v_{c,j}$ para $k \in S_c$\;
-        }
-        $W_{c,t}^{start} \leftarrow \sum_{k \in S_c} \alpha_{c,k} W_{k,t}$\;
-        $W_{c,t}^{end} \leftarrow \text{TreinamentoLocal}(W_{c,t}^{start}, \mathcal{D}_c)$\;
+        $W_{c,t} \leftarrow \sum\limits_{i \in S_c} \alpha_{c,i} W_{i,t}$\;
+        $W_{c,t}^{end} \leftarrow \text{TreinamentoLocal}(W_{c,t}, \mathcal{D}_c)$\;
         Envia $\{W_{c,t}^{end}, S_c\}$ para o servidor\;
         \BlankLine
-        \textbf{Servidor:}\;
-        \For{cada cluster $k \in \{1, \dots, K\}$}{
-            $W_{k,t+1} \leftarrow \frac{\sum_{c: k \in S_c} n_c W_{c,t}^{end}}{\sum_{c: k \in S_c} n_c}$\;
+        \textbf{Servidor:}\\
+        \For{cada cluster $i \in \{1, \dots, K\}$}{
+            \eIf{$\{c \in P_t \mid i \in S_c\} \neq \emptyset$}{
+                $W_{i,t+1} \leftarrow \frac{\sum\limits_{c \in \{j \in P_t \mid i \in S_j\}} |\mathcal{D}_c| W_{c,t}^{end}}{\sum\limits_{c \in \{j \in P_t \mid i \in S_j\}} |\mathcal{D}_c|}$\;
+            }{
+                $W_{i,t+1} \leftarrow W_{i,t}$\;
+            }
         }
     }
     \caption{Algoritmo FLASC}
     \label{alg:flasc}
 \end{algorithm}
+
+Tanto o FLASC quanto o FLSC gerenciam um conjunto de $K$ modelos globais no servidor,
+representados por $\mathcal{W}_t = \{W_{1,t}, W_{2,t}, \dots, W_{K,t}\}$.
+No início de cada rodada de treinamento, o servidor seleciona uma fração de clientes para participação e realiza a transmissão de $\mathcal{W}_t$.
+Uma vez recebidos os modelos, cada cliente participante $c$ mensura o desempenho de cada modelo
+calculando a Entropia Cruzada em relação ao seu conjunto de dados local $\mathcal{D}_c$ (Linha 6).
+
+\subsection{Seleção dos modelos no cliente}
+
+A partir das perdas calculadas, o FLASC avalia a amplitude entre a maior e a menor perda ($L_{max} - L_{min}$).
+Se essa diferença for inferior ao limiar de sensibilidade $\epsilon$,
+os modelos são considerados indistinguíveis para o cliente e um único modelo é selecionado aleatoriamente (Linha 9).
+Caso contrário, as perdas são normalizadas no intervalo $[0, 1]$ (Linha 12).
+
+Em seguida, define-se o conjunto $S_{c}$ dos índices dos modelos selecionados através de um limiar adaptativo $\rho \in [0, 1]$ (Linha 13).
+Este limiar determina quais modelos comporão a seleção, permitindo que o cliente ignore modelos com desempenho significativamente inferior.
+Diferentemente do FLSC, no qual o conjunto de modelos selecionados possui tamanho fixo $N$,
+o FLASC estabelece uma fronteira de inclusão flexível que prioriza o desempenho competitivo local.
+Para cada modelo selecionado, o FLASC atribui um peso de contribuição $\alpha_{c,i}$ que decresce linearmente em função da perda normalizada (Linhas 10 e 14).
+Este mecanismo assegura que modelos com menor erro local exerçam maior influência na fusão, característica ausente na formulação original do FLSC.
+
+\subsection{Fusão, treinamento e agregação}
+
+Concluída a etapa de seleção, o cliente sintetiza o modelo inicial para o treinamento local,
+$W_{c,t}$, mediante a fusão ponderada de $\mathcal{W}_t$ (Linha 16).
+Após o treinamento local, os parâmetros atualizados ($W_{c,t}^{end}$) são devolvidos ao servidor acompanhados de $S_c$ (Linhas 17-18).
+Ao término da rodada, o servidor atualiza os modelos globais de forma independente (Linhas 20-26).
+Para cada cluster $i$, a nova versão $W_{i,t+1}$ é obtida por meio de uma média ponderada
+das atualizações enviadas pelos clientes que integraram o respectivo modelo em sua fusão local.
+Caso o modelo $i$ não tenha sido selecionado por nenhum cliente na rodada vigente, seus parâmetros permanecem inalterados.
