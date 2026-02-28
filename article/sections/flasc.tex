@@ -1,4 +1,4 @@
-\section{FLASC} \label{sec:proposta}
+\section{FLASC} \label{sec:flasc}
 
 O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo do FLASC.
 
@@ -54,12 +54,13 @@ Se essa diferença for inferior ao limiar de sensibilidade $\epsilon$,
 os modelos são considerados indistinguíveis para o cliente e um único modelo é selecionado aleatoriamente (Linha 9).
 Caso contrário, as perdas são normalizadas no intervalo $[0, 1]$ (Linha 12).
 
-Em seguida, define-se o conjunto $S_{c}$ dos índices dos modelos selecionados através de um limiar adaptativo $\rho \in [0, 1]$ (Linha 13).
-Este limiar determina quais modelos comporão a seleção, permitindo que o cliente ignore modelos com desempenho significativamente inferior.
-Diferentemente do FLSC, no qual o conjunto de modelos selecionados possui tamanho fixo $N$,
-o FLASC estabelece uma fronteira de inclusão flexível que prioriza o desempenho competitivo local.
-Para cada modelo selecionado, o FLASC atribui um peso de contribuição $\alpha_{c,i}$ que decresce linearmente em função da perda normalizada (Linhas 10 e 14).
-Este mecanismo assegura que modelos com menor erro local exerçam maior influência na fusão, característica ausente na formulação original do FLSC.
+Em seguida, define-se o conjunto $S_{c}$ dos índices dos modelos selecionados através de um limiar $\rho \in [0, 1]$ (Linha 13).
+Este limiar estabelece um teto de tolerância para a perda relativa,
+assegurando que apenas os modelos com desempenho próximo ao melhor candidato local ($L_{min}$) componham o conjunto de fusão.
+Diferentemente do FLSC, onde o tamanho do conjunto de seleção $N$ é fixado a priori,
+o FLASC permite uma seleção adaptativa, evitando a inclusão de modelos com erros excessivos apenas para satisfazer uma restrição de cardinalidade.
+Adicionalmente, para cada modelo selecionado, o FLASC atribui um peso de contribuição $\alpha_{c,i}$ que decresce linearmente em função da perda normalizada (Linhas 10 e 14).
+Este mecanismo garante que modelos com menor erro local exerçam maior influência na fusão, funcionalidade que não é contemplada na formulação original do FLSC.
 
 \subsection{Fusão, treinamento e agregação}
 

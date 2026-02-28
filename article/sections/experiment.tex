@@ -1,56 +1,65 @@
-\section{Configuração Experimental} \label{sec:experimentos}
+\section{Proposta de avaliação} \label{sec:experiment}
 
-Para avaliar o desempenho do FLASC, foram conduzidos experimentos utilizando o FLSC \cite{li2022federated} como linha de base.
-O objetivo central da avaliação é qualificar o impacto de substituir o hiperparâmetro $N$ por $\rho$ (Veja a sessão ...).
-Para garantir uma comparação equivalente entre os dois algoritmos,
-variamos os hiperparâmetros $\rho$ e $N$ de forma correlacionada, conforme detalhado na Tabela \ref{tab:configs}.
-Note que $N = 2$ significa que metade dos modelos serão selecionados.
-Para reproduzir o equivalente com $\rho$,
+A avaliação do FLASC baseia-se na comparação direta com o FLSC \cite{li2022federated},
+adotado como linha de base para quantificar o impacto da substituição
+do parâmetro rígido de seleção $N$ pelo limiar adaptativo $\rho$.
+Conforme detalhado na Tabela \ref{tab:configs}, os hiperparâmetros
+de ambos os algoritmos variam de forma correlacionada para permitir comparar os algoritmos
+em cenários de seleção mínima (especializada) até inclusão total de modelos ($K=4$).
 
 \begin{table}[H]
 \centering
-\caption{Configuração dos hiperparâmetros de seleção para comparação.}
+\caption{Mapeamento de hiperparâmetros para comparação entre FLSC e FLASC.}
 \label{tab:configs}
 \begin{tabular}{lcc}
 \hline
-\textbf{Cenário} & \textbf{FLSC ($N$)} & \textbf{FLASC ($\rho$)} \\ \hline
-Seleção Mínima   & 1                   & 0                       \\
-Seleção Intermediária & 2                   & 0,5                     \\
-Seleção Máxima (Inclusiva)   & 4                   & 1,0                     \\ \hline
+\textbf{Cenário de Seleção} & \textbf{FLSC ($N$)} & \textbf{FLASC ($\rho$)} \\ \hline
+Mínima                      & 1                   & 0                       \\
+Intermediária (metade)      & 2                   & 0,5                     \\
+Máxima                      & 4                   & 1                       \\ \hline
 \end{tabular}
 \end{table}
 
-Para os experimentos, utilizamos o conjunto de dados CIFAR-10,
-que composto por 60.000 imagens coloridas de $32 \times 32$ pixels, distribuídas em 10 classes distintas.
+Para simular um ambiente de heterogeneidade de dados (\textit{non-IID}),
+foi utilizado o conjunto de dados CIFAR-10 \cite{krizhevsky2009learning}
+distribuído via partição de Dirichlet com $\alpha = 0,5$ \cite{hsu2019measuring}.
+Esse cenário reflete redes federadas reais, onde a distribuição de classes
+é desequilibrada entre os nós.
+No total, a simulação compreende 10 clientes participando de 10 rodadas
+de treinamento, com cada nó reservando 20\% de seus dados locais para a etapa de validação.
 
-A implementação do FLASC utiliza o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower} com pytorch para orquestrar a simulação.
-O código fonte completo, incluindo as estratégias de baseline e os scripts de reprodução,
-está disponível publicamente em um repositório no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
-
-Quando ao particionamento dos dados, foi utilizado uma distribuição de Dirichlet com $\alpha = 0,5$
-para refletir um cenário onde a distribuição de dados é desequilibrada.
-Cada cliente divide sua partição local em 80\% para treinamento e 20\% para avaliação.
-
-O modelo arquitetural adotado consiste em uma Rede Neural Convolucional (CNN) simples,
-composta por duas camadas de convolução seguidas por camadas totalmente conectadas.
-A primeira camada convolucional possui 6 filtros de tamanho $5 \times 5$,
-enquanto a segunda possui 16 filtros de mesmo tamanho, ambas seguidas por operações de \textit{max-pooling} de $2 \times 2$.
-As camadas densas subsequentes possuem 120, 84 e, finalmente, 10 neurônios na camada de saída, correspondendo às classes do CIFAR-10.
-Foi utilizada a função de ativação ReLU em todas as camadas ocultas e o otimizador SGD com momento de $0,9$.
-A função de perda adotada tanto para o treinamento local quanto para a avaliação de desempenho é a Entropia Cruzada (\textit{Cross-Entropy Loss}).
-
-Configuramos o ambiente de simulação com 10 nós (clientes) participando de 10 rodadas de treinamento federado.
-Em cada rodada, o servidor seleciona todos os clientes para o treinamento e metade deles para a etapa de avaliação.
-Estabelecemos um conjunto de $K=4$ modelos globais para ambos os algoritmos.
-Os parâmetros de treinamento local incluem 3 épocas, taxa de aprendizado de 0,001 e tamanho de lote de 32 amostras.
+Quanto à simulação, foi utilizado o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower}
+integrado à biblioteca PyTorch \cite{paszke2019pytorch}.
+A arquitetura dos modelos consiste em uma rede neural convolucional (CNN) de duas camadas de convolução
+($6$ e $16$ filtros de $5 \times 5$, respectivamente) intercaladas por \textit{max-pooling},
+seguidas por três camadas densas.
+O treinamento foi conduzido com otimizador SGD (momento $0,9$), taxa de aprendizado de $0,001$ e \textit{batch size} de $32$.
+Em cada rodada, os clientes executam $3$ épocas de treinamento local antes de reportar as atualizações ao servidor.
+O código completo e os scripts de reprodução estão disponíveis no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
 
 \subsection{Protocolo de Avaliação}
 
-A avaliação ocorre ao final de cada rodada de treinamento.
-Nesta etapa, o servidor transmite os $K$ modelos globais atualizados para os clientes selecionados.
-Cada cliente avalia individualmente o desempenho de todos os $K$ modelos em seu conjunto de dados de teste local.
-O cliente então identifica o modelo com o melhor desempenho (menor perda empírica) e reporta a acurácia e a perda deste modelo específico ao servidor.
+Ao final de cada rodada de treinamento, o servidor transmite os $K$ modelos globais atualizados para os clientes selecionados.
+Cada nó avalia individualmente o desempenho de todo o conjunto $\mathcal{W}_t$ em seu conjunto de teste local
+e identifica o modelo que apresenta a menor perda empírica.
+Uma vez identificado o melhor candidato para sua distribuição local,
+o cliente reporta a acurácia e a perda deste modelo específico ao servidor.
+A métrica global é então obtida através da média ponderada dessas respostas,
+garantindo que o resultado final reflita a eficácia do algoritmo em oferecer,
+dentro do conjunto de clusters, ao menos uma solução altamente compatível com a realidade de cada cliente.
 
-O servidor agrega essas métricas calculando a média ponderada pelo número de amostras locais de cada cliente.
-Este protocolo garante que a métrica final reflita a capacidade do sistema em oferecer, dentro do conjunto de clusters, pelo menos uma solução altamente especializada para cada distribuição de dados local encontrada na rede.
-Dessa forma, avaliamos não apenas a convergência dos modelos, mas a eficácia da especialização promovida pelo agrupamento.
+\subsection{Expectativas}
+
+A principal expectativa para os resultados no cenário de seleção mínima ($\rho = 0$ e $N = 1$).
+Nessa situação, antecipa-se que ambos os algoritmos apresentem desempenhos similares,
+uma vez que ambos convergem para um regime de agrupamento disjunto, selecionando apenas o modelo de melhor desempenho local.
+Contudo, a hipótese central deste trabalho é que o FLASC apresentará vantagens significativas nos demais cenários por dois motivos principais:
+\begin{enumerate}
+    \item \textbf{Adaptabilidade da seleção:} No cenário intermediário ($\rho=0,5$), enquanto o FLSC é forçado a incluir exatamente $N=2$ modelos,
+    o FLASC sabe determinar quantos modelos possuem uma perda aceitável para integrar a fusão baseado em $\rho$.
+    Espera-se que isso evite modelos com desempenho ruim de degradarem o treinamento local e a agregação global.
+    \item \textbf{Fusão ponderada:} No cenário de seleção máxima ($\rho=1$ e $N=4$), onde todos os modelos são incluídos,
+    o diferencial do FLASC reside na atribuição de pesos $\alpha_{c,i}$ (Linha 14 do Algoritmo \ref{alg:flasc}).
+    Enquanto o FLSC realiza uma média simples dos modelos, o FLASC prioriza aqueles com menor erro local.
+    Espera-se que essa ponderação resulte em uma convergência mais rápida e estável, mesmo em configurações altamente inclusivas.
+\end{enumerate}
