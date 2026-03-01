@@ -48,8 +48,7 @@ As métricas globais são então obtidas através da média ponderada dessas res
 
 \subsection{Expectativas}
 
-A principal expectativa para os resultados no cenário de seleção mínima ($\rho = 0$ e $N = 1$).
-Nessa situação, antecipa-se que ambos os algoritmos apresentem desempenhos similares,
+No cenário de seleção mínima ($\rho = 0$ e $N = 1$), antecipa-se que ambos os algoritmos apresentem desempenhos similares,
 uma vez que ambos convergem para um regime de agrupamento disjunto, selecionando apenas o modelo de melhor desempenho local.
 Contudo, a hipótese central deste trabalho é que o FLASC apresentará vantagens significativas nos demais cenários por dois motivos principais:
 \begin{enumerate}
@@ -61,3 +60,13 @@ Contudo, a hipótese central deste trabalho é que o FLASC apresentará vantagen
     Enquanto o FLSC realiza uma média simples dos modelos, o FLASC prioriza aqueles com menor erro local.
     Espera-se que essa ponderação resulte em uma convergência mais rápida e estável, mesmo em configurações altamente inclusivas.
 \end{enumerate}
+
+\subsection{Reprodutibilidade}
+
+Devido à natureza estocástica inerente ao aprendizado federado,
+foram adotadas medidas para assegurar a reprodutibilidade dos experimentos.
+O controle de aleatoriedade foi implementado por meio da fixação de sementes em componentes críticos,
+incluindo no particionamento dos dados entre os clientes,
+na inicialização dos pesos das redes e nas sub-rotinas de treinamento e avaliação.
+Cada cenário descrito na Tabela \ref{tab:configs} foi submetido a cinco execuções independentes,
+utilizando o conjunto de sementes $\{42, 43, 44, 45, 46\}$.

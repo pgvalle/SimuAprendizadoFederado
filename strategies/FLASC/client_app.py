@@ -32,6 +32,11 @@ def select_models(losses: list[float], rho: float, epsilon: float = 1e-5):
             selected_indices.append(i)
             raw_weights.append(1.0 - norm_l)
 
+    if selected_indices == []:
+        loss = min(losses)
+        idx = losses.index(loss)
+        return [idx], [1.0]
+
     # 2. Apply "Value as Weight" logic
     total = sum(raw_weights)
     final_weights = [w / total for w in raw_weights]
