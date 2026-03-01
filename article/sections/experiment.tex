@@ -4,10 +4,9 @@ Esta seção apresenta a metodologia experimental utilizada para avaliar o desem
 incluindo o objetivo da avaliação, os parâmetros, a distribuição dos dados,
 o protocolo de avaliação e as tecnologias utilizadas.
 
-A avaliação do FLASC baseia-se em quantificar o impacto da substituição
-do parâmetro rígido de seleção $N$ pelo limiar adaptativo $\rho$,
-Conforme detalhado na Tabela \ref{tab:configs}, os hiperparâmetros
-de ambos os algoritmos variam de forma correlacionada para permitir uma comparação
+A avaliação proposta visa quantificar o impacto de substituir o parâmetro rígido de seleção $N$ pelo limiar $\rho$.
+Conforme detalhado na Tabela \ref{tab:configs},
+os hiperparâmetros de ambos os algoritmos variam de forma correlacionada para permitir uma comparação
 em cenários de seleção unitária até inclusão total de modelos ($K=4$).
 O hiperparâmetro $\epsilon$ do FLASC foi fixado em $1 \times 10^{-5}$.
 
@@ -24,18 +23,17 @@ Máxima                      & 4                   & 1                       \\ 
 \end{tabular}
 \end{table}
 
-Para simular um ambiente de heterogeneidade de dados (\textit{non-IID}),
-foi utilizado o conjunto de dados CIFAR-10 \cite{krizhevsky2009learning} distribuído via partição de Dirichlet com $\alpha = 0,1$ \cite{hsu2019measuring}.
-O objetivo é refletir redes federadas reais onde a distribuição entre os nós é não-IID.
+Para simular um ambiente de heterogeneidade de dados,
+foi utilizado o conjunto de dados CIFAR-10~\cite{cifar10} distribuído via partição de Dirichlet com $\alpha = 0,1$.
 No total, a simulação compreende 10 clientes participando de 10 rodadas de treinamento,
 com cada nó reservando 20\% de seus dados locais para a etapa de avaliação.
 
-Quanto à simulação, foi utilizado o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower} integrado à biblioteca PyTorch \cite{paszke2019pytorch}.
+Quanto à simulação em si, foi utilizado o framework Flower (\textit{v1.24.0})~\cite{flower} integrado à biblioteca PyTorch~\cite{pytorch}.
 A arquitetura dos modelos consiste em uma rede neural convolucional (CNN) de duas camadas de convolução
 ($6$ e $16$ filtros de $5 \times 5$, respectivamente) intercaladas por \textit{max-pooling}, seguidas por três camadas densas.
 O treinamento foi conduzido com otimizador SGD (momento $0,9$), taxa de aprendizado de $0,001$ e \textit{batch size} de $32$.
 Em cada rodada, os clientes executam $3$ épocas de treinamento local antes de reportar as atualizações ao servidor.
-O código completo e os scripts de reprodução estão disponíveis no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
+O código completo e os scripts de reprodução estão disponíveis no GitHub\footnote{\url{https://github.com/pgvalle/SimuAprendizadoFederado}}.
 
 \subsection{Protocolo de avaliação}
 
@@ -61,7 +59,7 @@ Contudo, a hipótese central deste trabalho é que o FLASC apresentará melhores
 
 \subsection{Reprodutibilidade}
 
-Devido à natureza estocástica inerente ao aprendizado federado,
+Devido à natureza estocástica do aprendizado federado,
 foram adotadas medidas para assegurar a reprodutibilidade dos experimentos.
 O controle de aleatoriedade foi implementado por meio da fixação de sementes em componentes críticos,
 incluindo no particionamento dos dados entre os clientes,

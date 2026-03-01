@@ -23,18 +23,18 @@
 
 % Configuração para listings
 \lstset{
-    basicstyle=\footnotesize\ttfamily,
-    keywordstyle=\color{blue},
-    stringstyle=\color{red},
-    commentstyle=\color{green!60!black},
-    frame=lines,
-    numbers=left,
-    numberstyle=\tiny\color{gray},
-    breaklines=true,
-    showstringspaces=false
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\color{blue},
+  stringstyle=\color{red},
+  commentstyle=\color{green!60!black},
+  frame=lines,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  breaklines=true,
+  showstringspaces=false
 }
 
-\title{FLASC: Aprendizado Federado com Agrupamento Suave Adaptativo para Mitigação de Heterogeneidade de Dados}
+\title{FLASC: Aprendizado Federado com Agrupamento Suave Adaptativo para Minimização do Impacto da Heterogeneidade de Dados}
 
 \author{
   Pedro Gabriel do Valle Nogueira\inst{1}
@@ -50,28 +50,23 @@
 \maketitle
 
 \begin{resumo}
-O Aprendizado Federado Clusterizado (CFL) surgiu para os desafios de dados heterogêneos (\textit{non-IID}) 
-ao especializar modelos para grupos de clientes. 
-Este trabalho propõe o FLASC, 
-uma estratégia de CFL baseada no FLSC que introduz um limiar adaptativo $\rho$ 
-para substituir seleções rígida no agrupamento. 
-O FLASC permite que dispositivos ajustem dinamicamente sua participação em submodelos globais, 
-ponderando a fusão pela perda local. 
-Simulações com o CIFAR-10 demonstram que o FLASC alcança acurácia e convergência equivalentes à linha de base, 
-validando a viabilidade de mecanismos adaptativos na personalização de redes federadas.
+  O Aprendizado Federado (FL) enfrenta desafios devido à heterogeneidade estatística dos dados distribuídos.
+  O método FLSC minimiza esse impacto ao permitir que clientes participem de múltiplos clusters simultaneamente,
+  entretanto, utiliza parâmetros fixos e pesos uniformes.
+  Este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}),
+  uma abordagem que introduz a seleção adaptativa de modelos baseada em um limiar de tolerância e a fusão ponderada pela perda local.
+  Essa estratégia permite que o nível de participação e a influência de cada modelo se ajustem dinamicamente à distribuição de dados de cada cliente.
+  Testes com o conjunto CIFAR-10 mostram que o FLASC atinge resultados similares ao estado da arte.
 \end{resumo}
 
 \begin{abstract}
-Federated Learning (FL) faces challenges in non-IID data environments, 
-where single global models often underperform. 
-This paper proposes FLASC, 
-an FL strategy based on FLSC, 
-replacing rigid selection parameters with an adaptive threshold $\rho$. 
-FLASC enables clients to dynamically adjust the number of submodels used 
-and weight their fusion based on local empirical loss. 
-Experiments with the CIFAR-10 dataset 
-show that FLASC achieves accuracy and convergence rates equivalent to FLSC, 
-validating adaptive mechanisms for federated model personalization without performance degradation.
+  Federated Learning (FL) faces challenges due to statistical heterogeneity of distributed data.
+  The FLSC method minimizes this impact by allowing clients to participate in multiple clusters simultaneously;
+  however, it relies on fixed parameters and uniform weights.
+  This work proposes FLASC (Federated Learning with Adaptive Soft Clustering),
+  an approach that introduces adaptive model selection based on a tolerance threshold and weighted fusion through local loss.
+  This strategy allows the participation level and the influence of each model to dynamically adjust to each client's data distribution.
+  Tests with the CIFAR-10 dataset show that FLASC achieves results similar to the state-of-the-art.
 \end{abstract}
 
 \input{sections/introducao.tex}

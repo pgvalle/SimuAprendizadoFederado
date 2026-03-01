@@ -7,7 +7,7 @@ O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo do processo de 
 \begin{algorithm}[H]
     \SetAlgoLined
     \KwIn{Parâmetros iniciais $K$, tolerância $\rho$, sensibilidade $\epsilon$}
-    \KwData{Conjuntos de dados locais $\{\mathcal{D}_c\}$ nos clientes}
+    \KwData{Conjuntos de dados locais $\mathcal{D}_c$ nos clientes}
     \BlankLine
     \textbf{Servidor:} Inicializa $\mathcal{W}_1 = \{W_{1,1}, \dots, W_{K,1}\}$\;
     \BlankLine
@@ -56,7 +56,7 @@ Se essa diferença for inferior ao limiar de sensibilidade $\epsilon$,
 os modelos são considerados indistinguíveis para o cliente e um único modelo é selecionado aleatoriamente (Linha 9).
 Caso contrário, as perdas são normalizadas no intervalo $[0, 1]$ (Linha 12).
 
-Em seguida, define-se o conjunto $S_{c}$ dos índices dos modelos selecionados através de um limiar $\rho \in [0, 1]$ (Linha 13).
+Em seguida, define-se o conjunto $S_{c}$ dos índices dos modelos selecionados através do limiar $\rho \in [0, 1]$ (Linha 13).
 Este limiar estabelece um teto de tolerância para as perdas,
 assegurando que apenas os modelos com desempenho suficientemente próximo ao melhor candidato componham o conjunto de fusão.
 Diferentemente do FLSC, onde o tamanho do conjunto de seleção $N$ é fixado a priori,
@@ -71,5 +71,5 @@ $W_{c,t}$ mediante uma média ponderada (Linha 16).
 Após o treinamento local, os parâmetros atualizados ($W_{c,t}^{end}$) são devolvidos ao servidor acompanhados de $S_c$ (Linhas 17-18).
 Ao término da rodada, o servidor atualiza os modelos globais de forma independente (Linhas 20-26).
 Para cada cluster $i$, a nova versão $W_{i,t+1}$ é obtida por meio de uma média ponderada
-das atualizações enviadas pelos clientes que usam o respectivo modelo em sua fusão local.
-Caso o modelo $i$ não tenha sido selecionado por nenhum cliente na rodada vigente, seus parâmetros permanecem inalterados.
+das atualizações enviadas pelos clientes que usaram o respectivo modelo em sua fusão local.
+Caso $W_{i,t}$ não tenha sido selecionado por nenhum cliente, seus parâmetros permanecem inalterados.

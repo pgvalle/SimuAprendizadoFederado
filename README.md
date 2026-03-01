@@ -1,7 +1,6 @@
-## Three strategies
+## Two strategies
 
- - FedAvg (base line)
- - flsc (federated learning with soft clustering)
+ - flsc (federated learning with soft clustering; baseline)
  - flasc (federated learning with adaptive soft clustering)
 
 ## Notes for article

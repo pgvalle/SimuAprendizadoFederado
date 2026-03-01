@@ -18,7 +18,7 @@ Com o objetivo de solucionar esse problema, uma linha de pesquisa proeminente fo
 A intuição por trás do CFL é agrupar clientes com distribuições de dados semelhantes e treinar modelos especializados para cada grupo.
 Essa abordagem tem demonstrado melhorar significativamente o desempenho em ambientes heterogêneos.
 
-No IFCA, método de CFL proposto por Ghosh et al.~\cite{ghosh2020efficient},
+No IFCA, método de CFL proposto por Ghosh et al.~\cite{ifca},
 o servidor mantém múltiplos modelos globais e os transmite aos clientes.
 Cada participante avalia os modelos recebidos com seus próprios dados e seleciona aquele que possui menor perda como base para o treinamento local.
 Terminado o treinamento, o cliente envia o modelo treinado de volta para o servidor junto do identificador de qual modelo usou.
@@ -28,23 +28,24 @@ o que limita a possibilidade de usar conhecimento de outros grupos localmente.
 Isso também limita a contribuição do cliente na atualização dos modelos globais,
 já que apenas o modelo do grupo selecionado será beneficiado.
 
-Li et al.~\cite{li2022federated} apresenta o Aprendizado Federado com Agrupamento Suave (FLSC) como uma evolução do IFCA.
-Essa melhoria possibilitou aos clientes pertencerem a múltiplos grupos simultaneamente.
-Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados não-IID em relação ao seu antecessor~\cite{ghosh2020efficient}.
-Contudo, o método impõe um número fixo de grupos para todos os clientes participarem,
-e o peso de participação do cliente em qualquer grupo é sempre igual.
-Isso ainda não reflete perfeitamente um cenário real.
-Por exemplo, em um sistema de recomendação,
-conteúdos do tipo A e B podem estar em um cliente $c_1$, enquanto outro cliente $c_2$ possui conteúdos do tipo B, C, D e E.
-É natural pensar que $c_1$ participe de menos grupos de recomendação que $c_2$.
-Além disso, não necessariamente todos os conteúdos serão recomendados com a mesma frequência.
-Pode ser que $c_2$ consuma muito conteúdo do tipo B, consequentemente gerando muito mais dados desse tipo.
-Logo, também faz sentido que $c_2$ participe com maior peso do grupo que contempla o conteúdo do tipo B.
+Li et al.~\cite{flsc} apresentam o Aprendizado Federado com Agrupamento Suave (FLSC) como uma evolução do IFCA.
+Nesse método, os clientes selecionam um número fixo $N$ de modelos e transmitem ao servidor a lista com seus respectivos identificadores.
+Essa abordagem permitiu que os participantes pertencessem a múltiplos grupos simultaneamente e,
+graças a essa flexibilidade, o FLSC demonstrou capturar melhor a natureza dos dados não-IID.
+Contudo, o método impõe que todos os clientes participem de uma quantidade rígida de grupos,
+atribuindo sempre o mesmo peso de participação a cada um deles.
+Isso ainda não reflete fielmente um cenário real.
+Por exemplo, em um sistema de recomendação, um cliente $c_1$ pode possuir conteúdos apenas dos tipos A e B,
+enquanto outro cliente $c_2$ detém conteúdos dos tipos B, C, D e E.
+É natural supor que $c_1$ deva participar de menos grupos de recomendação que $c_2$.
+Além disso, os conteúdos não são necessariamente consumidos com a mesma frequência;
+se $c_2$ consome predominantemente o tipo B,
+faz sentido que ele participe com maior peso do grupo que contempla essa categoria específica.
 
 Visando superar as limitações do FLSC, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
 Diferente do FLSC, o FLASC permite não só que a quantidade de grupos que um cliente participe se ajuste conforme a sua distribuição local,
 como ele também pondera o peso de participação do cliente em cada grupo.
-Experimentos realizados com o conjunto de dados CIFAR-10~\cite{krizhevsky2009learning} em um cenário de heterogeneidade estatística
+Experimentos realizados com o conjunto de dados CIFAR-10~\cite{cifar10} em um cenário de heterogeneidade estatística
 demonstram que o FLASC alcança resultados de acurácia e perda comparáveis ao FLSC.
 
 O restante deste trabalho está organizado da seguinte forma:
