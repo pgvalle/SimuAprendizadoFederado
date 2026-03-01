@@ -1,0 +1,124 @@
+1
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '4.7317e+00'},
+  2: {'train_loss': '3.6479e+00'},
+  3: {'train_loss': '3.3688e+00'},
+  4: {'train_loss': '2.8402e+00'},
+  5: {'train_loss': '2.5879e+00'},
+  6: {'train_loss': '2.3860e+00'},
+  7: {'train_loss': '2.2725e+00'},
+  8: {'train_loss': '2.2000e+00'},
+  9: {'train_loss': '2.1438e+00'},
+  10: {'train_loss': '2.0956e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '9.3500e-02', 'eval_loss': '2.2944e+00'},
+  2: {'eval_acc': '1.1996e-01', 'eval_loss': '2.2502e+00'},
+  3: {'eval_acc': '1.0913e-01', 'eval_loss': '2.2655e+00'},
+  4: {'eval_acc': '1.1912e-01', 'eval_loss': '2.5110e+00'},
+  5: {'eval_acc': '6.1538e-02', 'eval_loss': '2.3990e+00'},
+  6: {'eval_acc': '3.1136e-01', 'eval_loss': '1.8950e+00'},
+  7: {'eval_acc': '1.6854e-01', 'eval_loss': '2.2040e+00'},
+  8: {'eval_acc': '2.7930e-01', 'eval_loss': '2.0795e+00'},
+  9: {'eval_acc': '2.8790e-01', 'eval_loss': '1.9438e+00'},
+  10: {'eval_acc': '3.4451e-01', 'eval_loss': '1.8123e+00'}}
+
+2
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '5.2887e+00'},
+  2: {'train_loss': '4.1726e+00'},
+  3: {'train_loss': '3.9136e+00'},
+  4: {'train_loss': '3.1438e+00'},
+  5: {'train_loss': '2.9827e+00'},
+  6: {'train_loss': '2.7529e+00'},
+  7: {'train_loss': '2.5716e+00'},
+  8: {'train_loss': '2.4495e+00'},
+  9: {'train_loss': '2.3584e+00'},
+  10: {'train_loss': '2.2906e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '1.3877e-01', 'eval_loss': '2.2882e+00'},
+  2: {'eval_acc': '3.3418e-02', 'eval_loss': '2.3341e+00'},
+  3: {'eval_acc': '2.7125e-02', 'eval_loss': '2.5973e+00'},
+  4: {'eval_acc': '7.1102e-02', 'eval_loss': '2.3434e+00'},
+  5: {'eval_acc': '1.6774e-01', 'eval_loss': '2.2296e+00'},
+  6: {'eval_acc': '2.1567e-01', 'eval_loss': '2.0953e+00'},
+  7: {'eval_acc': '1.3033e-01', 'eval_loss': '2.2242e+00'},
+  8: {'eval_acc': '2.6593e-01', 'eval_loss': '1.8678e+00'},
+  9: {'eval_acc': '3.1801e-01', 'eval_loss': '1.8472e+00'},
+  10: {'eval_acc': '1.5235e-01', 'eval_loss': '2.1368e+00'}}
+
+3
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '5.1018e+00'},
+  2: {'train_loss': '4.0427e+00'},
+  3: {'train_loss': '3.6997e+00'},
+  4: {'train_loss': '3.3178e+00'},
+  5: {'train_loss': '3.2371e+00'},
+  6: {'train_loss': '3.0943e+00'},
+  7: {'train_loss': '3.0366e+00'},
+  8: {'train_loss': '2.9539e+00'},
+  9: {'train_loss': '2.8609e+00'},
+  10: {'train_loss': '2.7569e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '1.5545e-01', 'eval_loss': '2.2790e+00'},
+  2: {'eval_acc': '1.0920e-01', 'eval_loss': '2.3496e+00'},
+  3: {'eval_acc': '7.7412e-02', 'eval_loss': '2.7073e+00'},
+  4: {'eval_acc': '8.7627e-02', 'eval_loss': '2.3998e+00'},
+  5: {'eval_acc': '1.7647e-02', 'eval_loss': '2.5623e+00'},
+  6: {'eval_acc': '1.5556e-01', 'eval_loss': '2.4413e+00'},
+  7: {'eval_acc': '2.3480e-01', 'eval_loss': '2.0507e+00'},
+  8: {'eval_acc': '2.1176e-01', 'eval_loss': '2.2231e+00'},
+  9: {'eval_acc': '2.4525e-01', 'eval_loss': '2.0760e+00'},
+  10: {'eval_acc': '3.2670e-01', 'eval_loss': '1.9696e+00'}}
+
+4
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '4.9290e+00'},
+  2: {'train_loss': '3.7907e+00'},
+  3: {'train_loss': '3.5068e+00'},
+  4: {'train_loss': '3.0218e+00'},
+  5: {'train_loss': '2.8105e+00'},
+  6: {'train_loss': '2.5973e+00'},
+  7: {'train_loss': '2.4299e+00'},
+  8: {'train_loss': '2.3030e+00'},
+  9: {'train_loss': '2.2156e+00'},
+  10: {'train_loss': '2.1568e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '1.0591e-01', 'eval_loss': '2.2942e+00'},
+  2: {'eval_acc': '1.6595e-01', 'eval_loss': '2.1968e+00'},
+  3: {'eval_acc': '1.5689e-01', 'eval_loss': '2.3933e+00'},
+  4: {'eval_acc': '1.0789e-01', 'eval_loss': '2.2993e+00'},
+  5: {'eval_acc': '1.0929e-01', 'eval_loss': '2.1641e+00'},
+  6: {'eval_acc': '2.0130e-01', 'eval_loss': '2.0067e+00'},
+  7: {'eval_acc': '3.0298e-01', 'eval_loss': '1.8143e+00'},
+  8: {'eval_acc': '3.2449e-01', 'eval_loss': '1.8763e+00'},
+  9: {'eval_acc': '1.6787e-01', 'eval_loss': '1.8744e+00'},
+  10: {'eval_acc': '2.5955e-01', 'eval_loss': '1.9159e+00'}}
+
+5
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '4.8509e+00'},
+  2: {'train_loss': '3.6712e+00'},
+  3: {'train_loss': '3.4648e+00'},
+  4: {'train_loss': '2.8392e+00'},
+  5: {'train_loss': '2.7503e+00'},
+  6: {'train_loss': '2.6140e+00'},
+  7: {'train_loss': '2.4670e+00'},
+  8: {'train_loss': '2.3306e+00'},
+  9: {'train_loss': '2.2257e+00'},
+  10: {'train_loss': '2.1465e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '1.6132e-01', 'eval_loss': '2.2826e+00'},
+  2: {'eval_acc': '1.2049e-01', 'eval_loss': '2.1593e+00'},
+  3: {'eval_acc': '1.2864e-01', 'eval_loss': '2.3345e+00'},
+  4: {'eval_acc': '8.6495e-02', 'eval_loss': '2.8466e+00'},
+  5: {'eval_acc': '8.9017e-02', 'eval_loss': '2.5947e+00'},
+  6: {'eval_acc': '1.4831e-01', 'eval_loss': '2.3764e+00'},
+  7: {'eval_acc': '2.1898e-01', 'eval_loss': '2.3164e+00'},
+  8: {'eval_acc': '1.1323e-01', 'eval_loss': '2.6249e+00'},
+  9: {'eval_acc': '1.5939e-01', 'eval_loss': '2.4311e+00'},
+  10: {'eval_acc': '2.0307e-01', 'eval_loss': '2.1065e+00'}}

@@ -1,8 +1,11 @@
 \section{Proposta de avaliação} \label{sec:experiment}
 
-A avaliação do FLASC baseia-se na comparação direta com o FLSC \cite{li2022federated},
-adotado como linha de base para quantificar o impacto da substituição
-do parâmetro rígido de seleção $N$ pelo limiar adaptativo $\rho$.
+Esta seção apresenta a metodologia experimental utilizada para avaliar o desempenho do FLASC,
+incluindo o objetivo da avaliação, os parâmetros, a distribuição dos dados,
+o protocolo de avaliação e as tecnologias utilizadas.
+
+A avaliação do FLASC baseia-se em quantificar o impacto da substituição
+do parâmetro rígido de seleção $N$ pelo limiar adaptativo $\rho$,
 Conforme detalhado na Tabela \ref{tab:configs}, os hiperparâmetros
 de ambos os algoritmos variam de forma correlacionada para permitir uma comparação
 em cenários de seleção unitária até inclusão total de modelos ($K=4$).
@@ -22,18 +25,14 @@ Máxima                      & 4                   & 1                       \\ 
 \end{table}
 
 Para simular um ambiente de heterogeneidade de dados (\textit{non-IID}),
-foi utilizado o conjunto de dados CIFAR-10 \cite{krizhevsky2009learning}
-distribuído via partição de Dirichlet com $\alpha = 0,2$ \cite{hsu2019measuring}.
-Esse cenário reflete redes federadas reais, onde a distribuição de classes
-é desequilibrada entre os nós.
-No total, a simulação compreende 10 clientes participando de 10 rodadas
-de treinamento, com cada nó reservando 20\% de seus dados locais para a etapa de validação.
+foi utilizado o conjunto de dados CIFAR-10 \cite{krizhevsky2009learning} distribuído via partição de Dirichlet com $\alpha = 0,1$ \cite{hsu2019measuring}.
+O objetivo é refletir redes federadas reais onde a distribuição entre os nós é não-IID.
+No total, a simulação compreende 10 clientes participando de 10 rodadas de treinamento,
+com cada nó reservando 20\% de seus dados locais para a etapa de avaliação.
 
-Quanto à simulação, foi utilizado o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower}
-integrado à biblioteca PyTorch \cite{paszke2019pytorch}.
+Quanto à simulação, foi utilizado o framework Flower (\textit{v1.24.0}) \cite{beutel2020flower} integrado à biblioteca PyTorch \cite{paszke2019pytorch}.
 A arquitetura dos modelos consiste em uma rede neural convolucional (CNN) de duas camadas de convolução
-($6$ e $16$ filtros de $5 \times 5$, respectivamente) intercaladas por \textit{max-pooling},
-seguidas por três camadas densas.
+($6$ e $16$ filtros de $5 \times 5$, respectivamente) intercaladas por \textit{max-pooling}, seguidas por três camadas densas.
 O treinamento foi conduzido com otimizador SGD (momento $0,9$), taxa de aprendizado de $0,001$ e \textit{batch size} de $32$.
 Em cada rodada, os clientes executam $3$ épocas de treinamento local antes de reportar as atualizações ao servidor.
 O código completo e os scripts de reprodução estão disponíveis no GitHub\footnote{\url{https://github.com/nogueirapv/SimuAprendizadoFederado}}.
@@ -49,16 +48,15 @@ As métricas globais são então obtidas através da média ponderada dessas res
 \subsection{Expectativas}
 
 No cenário de seleção mínima ($\rho = 0$ e $N = 1$), antecipa-se que ambos os algoritmos apresentem desempenhos similares,
-uma vez que ambos convergem para um regime de agrupamento disjunto, selecionando apenas o modelo de melhor desempenho local.
-Contudo, a hipótese central deste trabalho é que o FLASC apresentará vantagens significativas nos demais cenários por dois motivos principais:
+uma vez que ambos selecionam apenas o modelo de melhor desempenho local.
+Contudo, a hipótese central deste trabalho é que o FLASC apresentará melhores resultados nos demais cenários por dois motivos principais:
 \begin{enumerate}
     \item \textbf{Adaptabilidade da seleção:} No cenário intermediário ($\rho=0,5$), enquanto o FLSC é forçado a incluir exatamente $N=2$ modelos,
     o FLASC sabe determinar quantos modelos possuem uma perda aceitável para integrar a fusão baseado em $\rho$.
-    Espera-se que isso evite modelos com desempenho ruim de degradarem o treinamento local e a agregação global.
-    \item \textbf{Fusão ponderada:} No cenário de seleção máxima ($\rho=1$ e $N=4$), onde todos os modelos são incluídos,
-    o diferencial do FLASC reside na atribuição de pesos $\alpha_{c,i}$ (Linha 14 do Algoritmo \ref{alg:flasc}).
-    Enquanto o FLSC realiza uma média simples dos modelos, o FLASC prioriza aqueles com menor erro local.
-    Espera-se que essa ponderação resulte em uma convergência mais rápida e estável, mesmo em configurações altamente inclusivas.
+    Espera-se que isso evite modelos com desempenho ruim de degradarem o treinamento local e a agregação global. 
+    \item \textbf{Fusão ponderada:} No cenário de seleção máxima ($\rho=1$ e $N=4$) (e também no anterior),
+    espera-se que a atribuição de pesos maiores para modelos com menor perda (Linha 14 do Algoritmo \ref{alg:flasc})
+    resulte em uma convergência mais rápida.
 \end{enumerate}
 
 \subsection{Reprodutibilidade}

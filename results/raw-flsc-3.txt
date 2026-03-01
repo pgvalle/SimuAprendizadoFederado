@@ -74,3 +74,51 @@ Aggregated ClientApp-side Evaluate Metrics:
   10: {'eval_acc': '2.7204e-01', 'eval_loss': '2.1799e+00'}}
 
 4
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '5.3600e+00'},
+  2: {'train_loss': '4.4434e+00'},
+  3: {'train_loss': '3.2867e+00'},
+  4: {'train_loss': '3.0643e+00'},
+  5: {'train_loss': '2.8638e+00'},
+  6: {'train_loss': '2.6268e+00'},
+  7: {'train_loss': '2.4392e+00'},
+  8: {'train_loss': '2.3252e+00'},
+  9: {'train_loss': '2.2487e+00'},
+  10: {'train_loss': '2.1919e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '1.5537e-01', 'eval_loss': '2.2840e+00'},
+  2: {'eval_acc': '3.5067e-02', 'eval_loss': '2.4050e+00'},
+  3: {'eval_acc': '8.1007e-02', 'eval_loss': '2.3493e+00'},
+  4: {'eval_acc': '1.4979e-01', 'eval_loss': '2.2988e+00'},
+  5: {'eval_acc': '1.0948e-01', 'eval_loss': '2.3459e+00'},
+  6: {'eval_acc': '2.2280e-01', 'eval_loss': '2.0790e+00'},
+  7: {'eval_acc': '1.2920e-01', 'eval_loss': '2.1180e+00'},
+  8: {'eval_acc': '1.7018e-01', 'eval_loss': '1.9807e+00'},
+  9: {'eval_acc': '2.2642e-01', 'eval_loss': '2.0374e+00'},
+  10: {'eval_acc': '3.5851e-01', 'eval_loss': '1.8059e+00'}}
+
+5
+Aggregated ClientApp-side Train Metrics:
+{ 1: {'train_loss': '5.1712e+00'},
+  2: {'train_loss': '4.4353e+00'},
+  3: {'train_loss': '3.0911e+00'},
+  4: {'train_loss': '2.8808e+00'},
+  5: {'train_loss': '2.7304e+00'},
+  6: {'train_loss': '2.5790e+00'},
+  7: {'train_loss': '2.4349e+00'},
+  8: {'train_loss': '2.3124e+00'},
+  9: {'train_loss': '2.2109e+00'},
+  10: {'train_loss': '2.1346e+00'}}
+
+Aggregated ClientApp-side Evaluate Metrics:
+{ 1: {'eval_acc': '6.9395e-02', 'eval_loss': '2.3408e+00'},
+  2: {'eval_acc': '1.5230e-02', 'eval_loss': '2.5062e+00'},
+  3: {'eval_acc': '5.6544e-02', 'eval_loss': '2.7691e+00'},
+  4: {'eval_acc': '7.5616e-02', 'eval_loss': '2.6856e+00'},
+  5: {'eval_acc': '1.5982e-01', 'eval_loss': '2.7101e+00'},
+  6: {'eval_acc': '1.5458e-01', 'eval_loss': '2.4049e+00'},
+  7: {'eval_acc': '1.8252e-01', 'eval_loss': '2.1788e+00'},
+  8: {'eval_acc': '9.4024e-02', 'eval_loss': '2.5797e+00'},
+  9: {'eval_acc': '2.0549e-01', 'eval_loss': '2.2738e+00'},
+  10: {'eval_acc': '2.4244e-01', 'eval_loss': '2.0839e+00'}}

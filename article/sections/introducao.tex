@@ -3,74 +3,52 @@
 A crescente digitalização de serviços e a onipresença de dispositivos computacionais pessoais gera um volume de dados distribuídos sem precedentes,
 o que impulsiona o desenvolvimento de soluções baseadas em aprendizado de máquina (ML).
 Tradicionalmente, uma solução de ML exige que os dados estejam em um único dispositivo.
-No entanto, os dados distribuidos geralmente devem permanecer nos seus dispositivos de origem por questões de privacidade.
+No entanto, os dados distribuídos geralmente devem permanecer nos seus dispositivos de origem por questões de privacidade.
 Para superar esse obstáculo, o Aprendizado Federado (do inglês, \textit{Federated Learning} -- FL) surgiu como um paradigma
 onde um servidor mantém um modelo global e distribui cópias para clientes selecionados na rede.
 Nessa arquitetura, os dispositivos realizam o treinamento local com seus próprios dados e transmitem apenas as atualizações dos parâmetros.
 O servidor então agrega essas contribuições via média ponderada (FedAvg) para atualizar o modelo global.
-Todo esse processo se repete por diversas rodadas visando a convergência \cite{mcmahan2017communication, li2022federated}.
+Todo esse processo se repete por diversas rodadas visando a convergência~\cite{mcmahan2017communication}.
 
 Apesar dos avanços que o FL proporcionou para sistemas de recomendação e para a área da saúde,
-sua eficácia é frequentemente desafiada pela heterogeneidade estatística dos dados nos clientes (dados não-IID).
+sua eficácia é frequentemente desafiada pela heterogeneidade estatística dos dados nos clientes, conhecida como dados não-IID~\cite{hsu2019measuring}.
 Essa heterogeneidade impacta negativamente a agregação, tornando o modelo global subótimo para a maioria dos participantes.
 Com o objetivo de solucionar esse problema, uma linha de pesquisa proeminente foca no Aprendizado Federado Clusterizado
-(do inglês, \textit{Clustered FederatedLearning} -- CFL).
+(do inglês, \textit{Clustered Federated Learning} -- CFL).
 A intuição por trás do CFL é agrupar clientes com distribuições de dados semelhantes e treinar modelos especializados para cada grupo.
 Essa abordagem tem demonstrado melhorar significativamente o desempenho em ambientes heterogêneos.
 
-precisa ser determinado com o algoritmo.
-Briggs et al. \cite{briggs2020federated} propõe uma estratégia de CFL que tenta determinar esse número com o algoritmo de agrupamento hierarquico.
-O problema é que o agrupamento hierárquico gera grupos disjuntos,
-e é natural que um cliente possa ter dados que se encaixem em multiplos grupos.
-Outro ponto é que o agrupamento acontece em uma rodada arbitrária.
-Se o agrupamento for subótimo, isso impacta todo o restante do treinamento.
-% ... et al.
-% Porém esse método falha ao dele
-% Buscando otimizar o momento da clusterização,
-% o método K-FL \cite{kim2023kfl} emprega um Filtro de Kalman para monitorar a tendência da acurácia e decidir o instante ideal para o agrupamento.
-% Apesar da inovação no uso de filtros estocásticos para lidar com o ruído das atualizações,
-% o K-FL ainda mantém a premissa de fronteiras rígidas (\textit{hard boundaries}),
-% onde um dispositivo é sumariamente excluído de um cluster caso sua performance divirja da média,
-% uma decisão que pode ser prematura em cenários de alta variância nos dados.
-
-Outras estratégias de CFL assumem um número de agrupamentos conhecido.
-
-% Para mitigar o \textit{overhead} de comunicação,
-% Zhang et al. \cite{zhang2025lcfed} propuseram o LCFed,
-% que utiliza a divisão do modelo (\textit{model splitting}) e aproximações de baixo posto (\textit{low-rank}) para calcular similaridades de forma eficiente.
-% No entanto, o LCFed ainda restringe a decisão final do cliente a um único submodelo,
-% limitando a expressividade da personalização em casos onde o perfil de dados do cliente transita entre diferentes distribuições.
-
-No IFCA, proposto por Ghosh et al. \cite{ghosh2020efficient},
+No IFCA, método de CFL proposto por Ghosh et al.~\cite{ghosh2020efficient},
 o servidor mantém múltiplos modelos globais e os transmite aos clientes.
-Cada participante avalia os modelos recebidos com seus próprios dados e seleciona aquele que possui menor perda como base para o treinamento.
-Terminado o treinamento, ele envia o modelo treinado de volta para o servidor junto do identificador de qual modelo usou.
+Cada participante avalia os modelos recebidos com seus próprios dados e seleciona aquele que possui menor perda como base para o treinamento local.
+Terminado o treinamento, o cliente envia o modelo treinado de volta para o servidor junto do identificador de qual modelo usou.
 No servidor, cada modelo global é atualizado somente com os clientes que os utilizaram para treinar.
-O IFCA exige que o cliente se vincule estritamente a um grupo por rodada,
+O IFCA exige que o cliente se identifique estritamente com um grupo por rodada,
 o que limita a possibilidade de usar conhecimento de outros grupos localmente.
-Isso também limita contribuição do cliente na atualização do modelos globais,
-já que só o modelo do grupo que ele escolheu vai se beneficiar.
+Isso também limita a contribuição do cliente na atualização dos modelos globais,
+já que apenas o modelo do grupo selecionado será beneficiado.
 
-Li et al. \cite{li2022federated} apresenta o Aprendizado Federado com Agrupamento Suave (FLSC) como uma melhoria do IFCA.
+Li et al.~\cite{li2022federated} apresenta o Aprendizado Federado com Agrupamento Suave (FLSC) como uma evolução do IFCA.
 Essa melhoria possibilitou aos clientes pertencerem a múltiplos grupos simultaneamente.
-Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados não-IID em relação ao seu antessesor~\cite{...}.
+Graças a isso, o FLSC demonstrou capturar melhor a natureza dos dados não-IID em relação ao seu antecessor~\cite{ghosh2020efficient}.
 Contudo, o método impõe um número fixo de grupos para todos os clientes participarem,
 e o peso de participação do cliente em qualquer grupo é sempre igual.
 Isso ainda não reflete perfeitamente um cenário real.
-Por exemplo, num sistema de recomendação,
-conteudos do tipo A e B podem estar num cliente c1, enquanto outro cliente c2 tem conteudos do tipo B, C, D e E.
-É natural pensar que c1 participe de menos grupos de recomendação que c2.
-Além disso, não necessariamente todos conteúdos vão ser recomendados na mesma frequência.
-Pode ser que c2 consuma muito conteudo do tipo B, consequentemente gerando muito mais dados do tipo B.
-Logo faz sentido pensar que c2 participe bem mais do grupo que inclui conteudo do tipo B.
+Por exemplo, em um sistema de recomendação,
+conteúdos do tipo A e B podem estar em um cliente $c_1$, enquanto outro cliente $c_2$ possui conteúdos do tipo B, C, D e E.
+É natural pensar que $c_1$ participe de menos grupos de recomendação que $c_2$.
+Além disso, não necessariamente todos os conteúdos serão recomendados com a mesma frequência.
+Pode ser que $c_2$ consuma muito conteúdo do tipo B, consequentemente gerando muito mais dados desse tipo.
+Logo, também faz sentido que $c_2$ participe com maior peso do grupo que contempla o conteúdo do tipo B.
 
 Visando superar as limitações do FLSC, este trabalho propõe o FLASC (\textit{Federated Learning with Adaptive Soft Clustering}).
 Diferente do FLSC, o FLASC permite não só que a quantidade de grupos que um cliente participe se ajuste conforme a sua distribuição local,
 como ele também pondera o peso de participação do cliente em cada grupo.
-Experimentos ...
+Experimentos realizados com o conjunto de dados CIFAR-10~\cite{krizhevsky2009learning} em um cenário de heterogeneidade estatística
+demonstram que o FLASC alcança resultados de acurácia e perda comparáveis ao FLSC.
 
 O restante deste trabalho está organizado da seguinte forma:
-a Seção \ref{sec:flasc} descreve detalhadamente o funcionamento do algoritmo FLASC;
-a Seção \ref{sec:experiment} apresenta a metodologia de avaliação e o ambiente experimental;
-a Seção \ref{sec:results} expõe e discute os resultados obtidos;
-e, finalmente, a Seção \ref{sec:conclusion} traz as considerações finais e propostas de trabalhos futuros.
+a Seção~\ref{sec:flasc} descreve detalhadamente o funcionamento do algoritmo FLASC;
+a Seção~\ref{sec:experiment} detalha a metodologia de avaliação e o ambiente experimental;
+a Seção~\ref{sec:results} apresenta a análise dos resultados obtidos;
+e, finalmente, a Seção~\ref{sec:conclusion} traz as considerações finais e propostas para trabalhos futuros.

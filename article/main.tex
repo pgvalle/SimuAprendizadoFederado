@@ -12,7 +12,6 @@
 \usepackage[brazil]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{svg}
 \usepackage{placeins}
 \usepackage{hyperref}
 
@@ -51,9 +50,28 @@
 \maketitle
 
 \begin{resumo}
+O Aprendizado Federado Clusterizado (CFL) surgiu para os desafios de dados heterogêneos (\textit{non-IID}) 
+ao especializar modelos para grupos de clientes. 
+Este trabalho propõe o FLASC, 
+uma estratégia de CFL baseada no FLSC que introduz um limiar adaptativo $\rho$ 
+para substituir seleções rígida no agrupamento. 
+O FLASC permite que dispositivos ajustem dinamicamente sua participação em submodelos globais, 
+ponderando a fusão pela perda local. 
+Simulações com o CIFAR-10 demonstram que o FLASC alcança acurácia e convergência equivalentes à linha de base, 
+validando a viabilidade de mecanismos adaptativos na personalização de redes federadas.
 \end{resumo}
 
 \begin{abstract}
+Federated Learning (FL) faces challenges in non-IID data environments, 
+where single global models often underperform. 
+This paper proposes FLASC, 
+an FL strategy based on FLSC, 
+replacing rigid selection parameters with an adaptive threshold $\rho$. 
+FLASC enables clients to dynamically adjust the number of submodels used 
+and weight their fusion based on local empirical loss. 
+Experiments with the CIFAR-10 dataset 
+show that FLASC achieves accuracy and convergence rates equivalent to FLSC, 
+validating adaptive mechanisms for federated model personalization without performance degradation.
 \end{abstract}
 
 \input{sections/introducao.tex}

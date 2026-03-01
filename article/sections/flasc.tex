@@ -1,6 +1,8 @@
 \section{FLASC} \label{sec:flasc}
 
-O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo do FLASC.
+Esta seção detalha o funcionamento do algoritmo FLASC,
+descrevendo os mecanismos de seleção adaptativa e fusão ponderada que o diferenciam do FLSC.
+O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo do processo de treinamento federado.
 
 \begin{algorithm}[H]
     \SetAlgoLined
@@ -44,19 +46,19 @@ O Algoritmo \ref{alg:flasc} detalha o fluxo operacional completo do FLASC.
 Tanto o FLASC quanto o FLSC gerenciam um conjunto de $K$ modelos globais no servidor,
 representados por $\mathcal{W}_t = \{W_{1,t}, W_{2,t}, \dots, W_{K,t}\}$.
 No início de cada rodada de treinamento, o servidor seleciona uma fração de clientes para participação e realiza a transmissão de $\mathcal{W}_t$.
-Uma vez recebidos os modelos, cada cliente participante $c$ mensura o desempenho de cada modelo
+Uma vez recebidos os modelos, cada  participante $c$ mensura o desempenho de cada modelo
 calculando a Entropia Cruzada em relação ao seu conjunto de dados local $\mathcal{D}_c$ (Linha 6).
 
 \subsection{Seleção dos modelos no cliente}
 
-A partir das perdas calculadas, o FLASC avalia a amplitude entre a maior e a menor perda ($L_{max} - L_{min}$).
+A partir das perdas calculadas, o FLASC avalia a amplitude entre a maior e a menor perda (Linha 8).
 Se essa diferença for inferior ao limiar de sensibilidade $\epsilon$,
 os modelos são considerados indistinguíveis para o cliente e um único modelo é selecionado aleatoriamente (Linha 9).
 Caso contrário, as perdas são normalizadas no intervalo $[0, 1]$ (Linha 12).
 
 Em seguida, define-se o conjunto $S_{c}$ dos índices dos modelos selecionados através de um limiar $\rho \in [0, 1]$ (Linha 13).
-Este limiar estabelece um teto de tolerância para a perda relativa,
-assegurando que apenas os modelos com desempenho próximo ao melhor candidato local ($L_{min}$) componham o conjunto de fusão.
+Este limiar estabelece um teto de tolerância para as perdas,
+assegurando que apenas os modelos com desempenho suficientemente próximo ao melhor candidato componham o conjunto de fusão.
 Diferentemente do FLSC, onde o tamanho do conjunto de seleção $N$ é fixado a priori,
 o FLASC permite uma seleção adaptativa, evitando a inclusão de modelos com erros excessivos apenas para satisfazer uma restrição de cardinalidade.
 Adicionalmente, para cada modelo selecionado, o FLASC atribui um peso de contribuição $\alpha_{c,i}$ que decresce linearmente em função da perda normalizada (Linhas 10 e 14).
@@ -64,10 +66,10 @@ Este mecanismo garante que modelos com menor erro local exerçam maior influênc
 
 \subsection{Fusão, treinamento e agregação}
 
-Concluída a etapa de seleção, o cliente sintetiza o modelo inicial para o treinamento local,
-$W_{c,t}$, mediante a fusão ponderada de $\mathcal{W}_t$ (Linha 16).
+Concluída a etapa de seleção, o cliente sintetiza o modelo inicial para o treinamento local
+$W_{c,t}$ mediante uma média ponderada (Linha 16).
 Após o treinamento local, os parâmetros atualizados ($W_{c,t}^{end}$) são devolvidos ao servidor acompanhados de $S_c$ (Linhas 17-18).
 Ao término da rodada, o servidor atualiza os modelos globais de forma independente (Linhas 20-26).
 Para cada cluster $i$, a nova versão $W_{i,t+1}$ é obtida por meio de uma média ponderada
-das atualizações enviadas pelos clientes que integraram o respectivo modelo em sua fusão local.
+das atualizações enviadas pelos clientes que usam o respectivo modelo em sua fusão local.
 Caso o modelo $i$ não tenha sido selecionado por nenhum cliente na rodada vigente, seus parâmetros permanecem inalterados.

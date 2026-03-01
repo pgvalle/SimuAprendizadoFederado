@@ -66,7 +66,8 @@ def save_to_csv(data, output_path):
 
 if __name__ == "__main__":
     results_dir = 'results'
-    files_to_parse = ['raw-flasc-1.txt', 'raw-flsc-1.txt']
+    # Find all raw-*.txt files in the results directory
+    files_to_parse = [f for f in os.listdir(results_dir) if f.startswith('raw-') and f.endswith('.txt')]
     
     for filename in files_to_parse:
         input_path = os.path.join(results_dir, filename)
